@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: oppo-kz-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && gunicorn app.main:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --keep-alive 30 --access-logfile -
+    envVars:
+      - key: ENV
+        value: prod
+      - key: CORS_ORIGINS
+        # Put your frontend domain here (comma-separated if multiple)
+        value: https://oppo-kz-frontend.onrender.com
+      - key: DATABASE_URL
+        sync: false
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+
+  - type: static
+    name: oppo-kz-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://oppo-kz-backend.onrender.com
+    autoDeploy: true

@@ -1,0 +1,28 @@
+fastapi==0.112.2
+uvicorn[standard]==0.30.6
+gunicorn==22.0.0
+
+SQLAlchemy==2.0.34
+psycopg2-binary==2.9.9
+
+alembic==1.13.2
+
+pydantic==2.8.2
+pydantic-settings==2.3.4
+
+python-multipart==0.0.9
+python-dotenv==1.0.1
+passlib[bcrypt]==1.7.4
+PyJWT==2.9.0
+
+# appended
+    APScheduler==3.10.4
+    pytz==2024.1
+    pywebpush==1.14.0
+    py-vapid==1.9.0
+    cryptography==42.0.5
+
+# appended
+pytest>=8.1.1
+httpx>=0.27.0
+pytest-asyncio>=0.23.6
