@@ -1,5 +1,7 @@
 # backend/app/models.py
 from __future__ import annotations
+from enum import Enum
+
 
 from datetime import date, datetime, timezone
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -7,6 +9,14 @@ from sqlalchemy import (
     Integer, String, Date, DateTime, Numeric, ForeignKey, Boolean,
     UniqueConstraint, Index, Text
 )
+from enum import Enum
+
+class UserRole(str, Enum):
+    admin = "admin"
+    office = "office"
+    supervisor = "supervisor"
+    user = "user"
+
 
 class Base(DeclarativeBase):
     pass
