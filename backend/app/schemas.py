@@ -239,10 +239,6 @@ class CampaignOut(ORMModel):
     skus: list[str] | None = None
     mechanics: dict | None = None
 # backend/app/schemas.py
-from __future__ import annotations
-
-from datetime import datetime
-from pydantic import BaseModel
 
 
 # ---------- Notifications ----------
