@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""bootstrap userrole enum and add supervisor value"""
+"""bootstrap userrole enum and add supervisor value safely"""
 
 from alembic import op
 
-# Эта миграция должна быть самой первой
+# Самая первая миграция
 revision = "2025_08_31_add_supervisor_role"
 down_revision = None
 branch_labels = None
@@ -12,16 +12,16 @@ depends_on = None
 
 def upgrade() -> None:
     # Создаём ENUM userrole, если его ещё нет.
-    # Если уже есть, но без значения 'supervisor' — добавляем безопасно.
+    # Если тип уже есть, но нет значения 'supervisor' — добавляем.
     op.execute(
         """
         DO $$
         BEGIN
-            -- 1) Если ENUM userrole ещё не создан, создаём сразу с полным набором ролей
+            -- 1) Если ENUM userrole не существует — создаём сразу со всеми базовыми ролями
             IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
                 CREATE TYPE userrole AS ENUM ('admin','office','promoter','supervisor');
             ELSE
-                -- 2) Если тип уже есть, но значения 'supervisor' нет — добавим
+                -- 2) Если тип есть, но без 'supervisor' — добавим безопасно
                 IF NOT EXISTS (
                     SELECT 1
                     FROM pg_type t
@@ -37,5 +37,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    --  В проде удалять значения из ENUM опасно и сложно, оставляем no-op
+    # Откат значений из ENUM в проде делать опасно: оставляем no-op
     pass
