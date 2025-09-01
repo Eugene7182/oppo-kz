@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.deps import get_db, get_current_user_admin_or_office  # пример RBAC
-from app.models.user import User, UserRole
+from app.models import User, UserRole
 from app.schemas.user import UserOut
 
 router = APIRouter(tags=["supervisors"])
