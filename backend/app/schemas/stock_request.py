@@ -24,12 +24,11 @@ class StockRequestBase(BaseModel):
 
 
 class StockRequestCreate(StockRequestBase):
-    # Обычно promoter_id берём из текущего пользователя, поэтому не требуем здесь
     pass
 
 
 class StockRequestOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)  # Pydantic v2
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     promoter_id: Optional[int] = None
