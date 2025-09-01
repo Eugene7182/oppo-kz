@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from app.db.session import get_session
+from app.db import get_db  # алиас на get_session
 from app.schemas import (
     NotificationOut,
     NotificationMarkReadIn,
