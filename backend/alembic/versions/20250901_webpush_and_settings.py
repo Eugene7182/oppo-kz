@@ -5,29 +5,20 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "20250901_webpush_and_settings"
-down_revision = "2025_09_01_features_audit_bonus_campaigns"
+down_revision = "2025_09_01_auth_invites"  # <-- ОБНОВЛЕНО
 branch_labels = None
 depends_on = None
 
-
 def upgrade() -> None:
-    # app_settings (k/v)
     op.create_table(
         "app_settings",
         sa.Column("key", sa.String(length=100), primary_key=True),
         sa.Column("value", sa.Text(), nullable=False),
     )
-
-    # web push subscriptions
     op.create_table(
         "push_subscriptions",
         sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column(
-            "user_id",
-            sa.Integer,
-            sa.ForeignKey("users.id", ondelete="CASCADE"),
-            nullable=False,
-        ),
+        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("endpoint", sa.String(length=1000), nullable=False),
         sa.Column("p256dh", sa.String(length=255), nullable=False),
         sa.Column("auth", sa.String(length=255), nullable=False),
@@ -36,7 +27,6 @@ def upgrade() -> None:
         sa.Column("last_sent_at", sa.DateTime(), nullable=True),
     )
     op.create_unique_constraint("uq_push_endpoint", "push_subscriptions", ["endpoint"])
-
 
 def downgrade() -> None:
     op.drop_constraint("uq_push_endpoint", "push_subscriptions", type_="unique")
