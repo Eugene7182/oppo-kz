@@ -1,29 +1,30 @@
 # backend/app/db/session.py
+from __future__ import annotations
+
 import os
+from typing import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
-# Читаем DSN. Фоллбек на Render-ные переменные тоже поддержим
-DB_DSN = (
-    os.getenv("DB_DSN")
-    or os.getenv("DATABASE_URL")            # на всякий случай
-    or "sqlite:///./data.db"                # локальный фоллбек
-)
+# Берём URL из settings или из переменной окружения
+try:
+    from app.core.config import settings  # type: ignore
+    db_url = getattr(settings, "DATABASE_URL", None) or os.environ["DATABASE_URL"]
+except Exception:
+    db_url = os.environ["DATABASE_URL"]
 
-# Нормализация префикса, если вдруг придёт "postgres://"
-if DB_DSN.startswith("postgres://"):
-    DB_DSN = DB_DSN.replace("postgres://", "postgresql+psycopg://", 1)
-# Если Render дал "postgresql://", явно укажем драйвер psycopg3
-if DB_DSN.startswith("postgresql://"):
-    DB_DSN = DB_DSN.replace("postgresql://", "postgresql+psycopg://", 1)
+# Форсим драйвер psycopg3 (SQLAlchemy 2.x)
+if "+psycopg" not in db_url:
+    db_url = db_url.replace("postgres://", "postgresql+psycopg://") \
+                   .replace("postgresql://", "postgresql+psycopg://", 1)
 
-connect_args = {"check_same_thread": False} if DB_DSN.startswith("sqlite") else {}
+engine = create_engine(db_url, pool_pre_ping=True, future=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-engine = create_engine(
-    DB_DSN,
-    pool_pre_ping=True,
-    connect_args=connect_args,
-    future=True,
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def get_session() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
