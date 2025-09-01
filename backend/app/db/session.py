@@ -28,3 +28,6 @@ def get_session() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+# алиас под старые импорты:
+get_db = get_session
