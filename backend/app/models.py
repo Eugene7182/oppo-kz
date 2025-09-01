@@ -9,7 +9,6 @@ from sqlalchemy import (
     Integer, String, Date, DateTime, Numeric, ForeignKey, Boolean,
     UniqueConstraint, Index, Text
 )
-from enum import Enum
 
 class UserRole(str, Enum):
     admin = "admin"
