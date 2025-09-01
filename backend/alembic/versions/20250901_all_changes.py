@@ -92,7 +92,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # откатываем в обратном порядке зависимостей
     op.execute("DROP TABLE IF EXISTS stock_requests;")
     op.execute("DROP TABLE IF EXISTS bonus_overachievement_rules;")
     op.execute("DROP TABLE IF EXISTS notification_prefs;")
@@ -106,7 +105,6 @@ def downgrade() -> None:
         """
     )
 
-    # enum удаляем, только если не используется
     op.execute(
         """
         DO $$ BEGIN
