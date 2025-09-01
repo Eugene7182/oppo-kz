@@ -3,7 +3,13 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from app.db.session import get_session
-from app.schemas.notification import NotificationOut, NotificationMarkReadIn, NotificationPrefOut, NotificationPrefUpdate
+from app.schemas.notification import (
+    NotificationOut,
+    NotificationMarkReadIn,
+    NotificationPrefOut,
+    NotificationPrefUpdate,
+)
+
 from app.models.notification import Notification
 from app.models.notification_pref import NotificationPreference
 
