@@ -5,7 +5,7 @@ from datetime import date, datetime, timezone
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import (
     Integer, String, Date, DateTime, Numeric, ForeignKey, Boolean,
-    UniqueConstraint, Index
+    UniqueConstraint, Index, Text
 )
 
 class Base(DeclarativeBase):
