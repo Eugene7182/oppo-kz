@@ -5,7 +5,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "2025_09_01_features_audit_bonus_campaigns"
-down_revision = "2025_09_01_store_coefficients"
+down_revision = "2025_09_01_alembic_verlen"  # <-- было "2025_09_01_store_coefficients"
 branch_labels = None
 depends_on = None
 
