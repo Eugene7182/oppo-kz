@@ -238,3 +238,31 @@ class CampaignOut(ORMModel):
     stores: list[str] | None = None
     skus: list[str] | None = None
     mechanics: dict | None = None
+# backend/app/schemas.py
+from __future__ import annotations
+
+from datetime import datetime
+from pydantic import BaseModel
+
+
+# ---------- Notifications ----------
+class NotificationOut(BaseModel):
+    id: int
+    title: str
+    body: str | None = None
+    is_read: bool
+    created_at: datetime
+
+
+class NotificationMarkReadIn(BaseModel):
+    ids: list[int]
+
+
+class NotificationPrefOut(BaseModel):
+    email_enabled: bool = True
+    push_enabled: bool = True
+
+
+class NotificationPrefUpdate(BaseModel):
+    email_enabled: bool | None = None
+    push_enabled: bool | None = None
