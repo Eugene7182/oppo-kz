@@ -1,19 +1,19 @@
-from pydantic import BaseModel, EmailStr
-from enum import Enum
+from datetime import datetime
+from typing import Optional
 
-class UserRole(str, Enum):
-    admin = "admin"
-    office = "office"
-    supervisor = "supervisor"  # <-- добавили
-    promoter = "promoter"
+from pydantic import BaseModel, ConfigDict, EmailStr
 
-class UserBase(BaseModel):
+
+class UserOut(BaseModel):
+    id: int
     email: EmailStr
-    full_name: str | None = None
-    role: UserRole
+    role: str  # если у вас Enum в БД — оставляем str для сериализации
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    position: Optional[str] = None
+    is_active: Optional[bool] = True
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-class UserCreate(UserBase):
-    password: str
-
-class UserOut(UserBase):
-    id: str
+    # позволяем создавать из ORM-объектов (SQLAlchemy)
+    model_config = ConfigDict(from_attributes=True)
