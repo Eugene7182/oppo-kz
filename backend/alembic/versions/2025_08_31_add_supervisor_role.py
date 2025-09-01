@@ -3,7 +3,6 @@
 
 from alembic import op
 
-# Alembic IDs
 revision = "2025_08_31_add_supervisor_role"
 down_revision = None
 branch_labels = None
@@ -11,7 +10,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Безопасно добавляем значение 'supervisor' в существующий ENUM userrole
+    # Безопасно добавляем 'supervisor' в ENUM userrole
     op.execute(
         """
         DO $$
@@ -30,5 +29,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Удалять значения из ENUM в проде обычно не делают; оставляем no-op
+    # Удалять значение из ENUM в проде обычно не делают
     pass
