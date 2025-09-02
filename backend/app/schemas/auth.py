@@ -1,9 +1,6 @@
-from __future__ import annotations
-
-from datetime import datetime
+# backend/app/schemas/auth.py
 from typing import Optional
-
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class TokenOut(BaseModel):
@@ -14,35 +11,22 @@ class TokenOut(BaseModel):
 
 class LoginInput(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
+    password: str
 
 
 class RefreshInput(BaseModel):
     refresh_token: str
 
 
-class InviteCreateIn(BaseModel):
-    email: EmailStr
-    role: Optional[str] = None
-    store_id: Optional[int] = None
-    note: Optional[str] = None
-
-
-class InviteCreateOut(BaseModel):
-    id: int
-    email: EmailStr
-    code: str
-    expires_at: Optional[datetime] = None
-
-
-class InviteCheckOut(BaseModel):
-    email: Optional[EmailStr] = None
-    is_valid: bool
-    reason: Optional[str] = None
-
-
+# >>> ЭТОЙ МОДЕЛИ НЕ ХВАТАЛО <<<
 class RegisterByInviteIn(BaseModel):
-    code: str
-    password: str = Field(min_length=6)
-    full_name: Optional[str] = None
-    phone: Optional[str] = None
+    """Поля под регистрацию по инвайту.
+    Делайте их под ваш фактический payload.
+    """
+    invite_code: str          # или token: str — как у вас называется
+    password: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+    # чтобы не падать, если прилетят лишние поля
+    model_config = ConfigDict(extra="ignore")
