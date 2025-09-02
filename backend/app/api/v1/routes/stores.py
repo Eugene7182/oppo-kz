@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ....models import Store
-from ....schemas import StoreOut, StoreIn
+from app.schemas.store import StoreOut, StoreIn
 from ..deps import get_db, require_super
 
 router = APIRouter(prefix="/stores", tags=["stores"])
