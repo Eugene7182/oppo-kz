@@ -1,23 +1,16 @@
 # backend/app/schemas/invites.py
-
 from datetime import datetime
 from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-
-# ----- INPUT SCHEMAS -----
-
+# ----- INPUTS -----
 class InviteCreateIn(BaseModel):
     email: EmailStr
-    # Если роль у вас Enum в БД — здесь оставляем str, чтобы спокойно сериализовать
     role: Optional[str] = None
     note: Optional[str] = None
 
-
 class InviteCheckIn(BaseModel):
     code: str
-
 
 class RegisterByInviteIn(BaseModel):
     code: str
@@ -26,13 +19,10 @@ class RegisterByInviteIn(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
 
-
 class InviteAcceptIn(BaseModel):
     code: str
 
-
-# ----- OUTPUT SCHEMAS -----
-
+# ----- OUTPUTS -----
 class InviteCreateOut(BaseModel):
     id: int
     code: str
@@ -40,9 +30,7 @@ class InviteCreateOut(BaseModel):
     role: Optional[str] = None
     expires_at: Optional[datetime] = None
     created_at: datetime
-
     model_config = ConfigDict(from_attributes=True)
-
 
 class InviteCheckOut(BaseModel):
     valid: bool
@@ -50,12 +38,10 @@ class InviteCheckOut(BaseModel):
     email: Optional[EmailStr] = None
     role: Optional[str] = None
 
-
 class InviteAcceptOut(BaseModel):
     accepted: bool
     user_id: Optional[int] = None
     invited_email: Optional[EmailStr] = None
-
 
 __all__ = [
     "InviteCreateIn", "InviteCreateOut",
