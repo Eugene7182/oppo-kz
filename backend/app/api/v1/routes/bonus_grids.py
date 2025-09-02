@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ....db import get_db
 from ....models import BonusGrid
-from ....schemas import BonusGridIn, BonusGridOut
+from app.schemas.bonus_grids import BonusGridIn, BonusGridOut
 from ..deps import require_super  # только супер может изменять
 
 router = APIRouter(prefix="/api/v1/bonus", tags=["Bonus Grids"])
