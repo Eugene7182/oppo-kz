@@ -1,40 +1,22 @@
-# Public exports for "from app.schemas import ..."
+# backend/app/schemas/__init__.py
 
-# ---- Auth schemas ----
 from .auth import (
-    TokenOut,
-    LoginInput,
-    RefreshInput,
-    RegisterByInviteIn,
+    TokenOut, LoginInput, RefreshInput,
 )
 
-# ---- Invite schemas ----
 from .invites import (
-    InviteCreateIn,
-    InviteCreateOut,
-    InviteCheckIn,
-    InviteCheckOut,
-    InviteAcceptIn,
-    InviteAcceptOut,
+    InviteCreateIn, InviteCreateOut,
+    InviteCheckIn, InviteCheckOut,
+    RegisterByInviteIn,
+    InviteAcceptIn, InviteAcceptOut,
 )
-
-# ---- User schema ----
-# у тебя файл называется user.py
-from .user import UserOut
 
 __all__ = [
     # auth
-    "TokenOut",
-    "LoginInput",
-    "RefreshInput",
-    "RegisterByInviteIn",
+    "TokenOut", "LoginInput", "RefreshInput",
     # invites
-    "InviteCreateIn",
-    "InviteCreateOut",
-    "InviteCheckIn",
-    "InviteCheckOut",
-    "InviteAcceptIn",
-    "InviteAcceptOut",
-    # users
-    "UserOut",
+    "InviteCreateIn", "InviteCreateOut",
+    "InviteCheckIn", "InviteCheckOut",
+    "RegisterByInviteIn",
+    "InviteAcceptIn", "InviteAcceptOut",
 ]
