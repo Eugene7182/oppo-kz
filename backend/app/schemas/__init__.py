@@ -1,4 +1,4 @@
-m ....models import BonusPayout
+from app.core_schemas import BonusPayoutOut
 # backend/app/schemas/__init__.py
 from __future__ import annotations
 
