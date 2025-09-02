@@ -7,13 +7,15 @@ from .auth import (
     InviteCreateIn,
     InviteOut,
     InviteCreateOut,
+    InviteCheckOut,
 )
 
-# Если у тебя есть файл backend/app/schemas/user.py с UserOut — оставляем импорт:
+# Если есть файл backend/app/schemas/user.py с UserOut — импортируем.
+# Если его нет, оставляем мягкую заглушку, чтобы импорты не падали.
 try:
     from .user import UserOut
-except Exception:  # на случай отсутствия user.py в ранней стадии
-    class UserOut:  # заглушка, чтобы импорты не падали (лучше заменить на реальную модель)
+except Exception:
+    class UserOut:  # заглушка — лучше заменить на реальную модель
         pass
 
 __all__ = [
@@ -23,5 +25,6 @@ __all__ = [
     "InviteCreateIn",
     "InviteOut",
     "InviteCreateOut",
+    "InviteCheckOut",
     "UserOut",
 ]
