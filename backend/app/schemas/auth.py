@@ -4,66 +4,45 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
-from pydantic import ConfigDict
 
-
-# ======== AUTH ========
 
 class TokenOut(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
+    refresh_token: Optional[str] = None
 
 
 class LoginInput(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=6)
 
 
 class RefreshInput(BaseModel):
     refresh_token: str
 
 
-# ======== INVITES ========
-
 class InviteCreateIn(BaseModel):
-    """
-    Входная модель для создания инвайта.
-    """
     email: EmailStr
-    role: str = Field(default="promoter", description="Role for invited user")
+    role: Optional[str] = None
+    store_id: Optional[int] = None
     note: Optional[str] = None
-    # Можно задать либо относительный срок, либо конкретную дату
-    expires_in_days: Optional[int] = Field(default=7, ge=1, le=365)
-    expires_at: Optional[datetime] = None
 
 
-class InviteOut(BaseModel):
+class InviteCreateOut(BaseModel):
     id: int
     email: EmailStr
     code: str
-    role: str
-    note: Optional[str] = None
     expires_at: Optional[datetime] = None
-    accepted_at: Optional[datetime] = None
-    created_at: Optional[datetime] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class InviteCreateOut(InviteOut):
-    """Ответ после создания инвайта (тот же payload, что и InviteOut)."""
-    pass
 
 
 class InviteCheckOut(BaseModel):
-    """
-    Ответ для проверки инвайта по коду.
-    """
-    exists: bool
-    valid: bool
-    reason: Optional[str] = None  # например: "expired", "already_used", "not_found"
     email: Optional[EmailStr] = None
-    role: Optional[str] = None
-    expires_at: Optional[datetime] = None
-    accepted_at: Optional[datetime] = None
+    is_valid: bool
+    reason: Optional[str] = None
+
+
+class RegisterByInviteIn(BaseModel):
+    code: str
+    password: str = Field(min_length=6)
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
