@@ -1,137 +1,145 @@
-import secrets
-from datetime import datetime, timedelta, timezone
+# backend/app/api/v1/routes/auth.py
+from __future__ import annotations
 
+import os
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+import jwt  # PyJWT
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from ....core.security import (
-    hash_password, verify_password, create_access_token,
-    require_roles, get_db, get_current_user
-)
-from ....models import User, UserInvite
-from ....schemas import (
-    TokenOut, UserOut,
-    InviteCreateIn, InviteCreateOut, InviteCheckOut,
-    RegisterByInviteIn,
-)
+from ..deps import get_db  # берем сессию БД из твоего deps.py
+from app.models import User  # у тебя модели сведены в app.models (монолит)
+from app.schemas.auth import TokenOut, LoginInput, RefreshInput
+from app.schemas.user import UserOut
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# ---- Конфиги токенов и хэширования ----
+ALGO = os.getenv("JWT_ALGORITHM", "HS256")
+SECRET = os.getenv("JWT_SECRET", "CHANGE_ME_IN_PROD")
+ACCESS_MIN = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+REFRESH_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
 
-# ---------- LOGIN ----------
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+
+# ---- Утилиты безопасности (локально, чтобы не тащить внешние зависимости) ----
+def _hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def _verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
+
+
+def _create_token(sub: str, ttype: str, minutes: int | None = None, days: int | None = None) -> str:
+    now = datetime.now(tz=timezone.utc)
+    exp = now + (timedelta(days=days or 0) if days else timedelta(minutes=minutes or 30))
+    payload: dict[str, Any] = {
+        "sub": sub,
+        "type": ttype,           # "access" | "refresh"
+        "iat": int(now.timestamp()),
+        "nbf": int(now.timestamp()),
+        "exp": int(exp.timestamp()),
+    }
+    return jwt.encode(payload, SECRET, algorithm=ALGO)
+
+
+def _decode_token(token: str) -> dict[str, Any]:
+    return jwt.decode(token, SECRET, algorithms=[ALGO])
+
+
+def _create_access(sub: str) -> str:
+    return _create_token(sub, "access", minutes=ACCESS_MIN)
+
+
+def _create_refresh(sub: str) -> str:
+    return _create_token(sub, "refresh", days=REFRESH_DAYS)
+
+
+# ---- Зависимость: текущий пользователь по access-токену ----
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    try:
+        payload = _decode_token(token)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    if payload.get("type") != "access":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No subject in token")
+
+    user = db.get(User, user_id)
+    if not user or not getattr(user, "is_active", True):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User disabled or not found")
+    return user
+
+
+# ---- /auth/login (JSON) ----
 @router.post("/login", response_model=TokenOut)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(payload: LoginInput, db: Session = Depends(get_db)) -> TokenOut:
     """
-    Принимает x-www-form-urlencoded: username, password
-    Возвращает JWT.
+    Логин по JSON (username или email + пароль).
+    Возвращает пару токенов: access/refresh.
     """
-    user = db.scalar(select(User).where(User.username == form.username))
-    if not user or not verify_password(form.password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    token = create_access_token({"sub": user.username, "role": user.role})
-    return TokenOut(access_token=token)
-
-
-@router.get("/me", response_model=UserOut)
-def me(current: User = Depends(get_current_user)):
-    return current
-
-
-# ---------- INVITES ----------
-@router.post("/invites", response_model=InviteCreateOut, dependencies=[Depends(require_roles("super"))])
-def create_invite(body: InviteCreateIn, current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    # генерим уникальный код
-    code = secrets.token_urlsafe(20)
-
-    expires_hours = body.expires_hours or 72
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_hours)
-
-    inv = UserInvite(
-        code=code,
-        role=body.role,
-        username=body.username.strip(),
-        full_name=(body.full_name or "").strip() or None,
-        store_id=body.store_id,
-        network=(body.network or "").strip() or None,
-        created_by=current.id,
-        expires_at=expires_at,
+    user: User | None = (
+        db.query(User)
+        .filter(or_(User.username == payload.username, User.email == payload.username))
+        .first()
     )
-    db.add(inv)
-    db.commit()
-    return InviteCreateOut(code=code, username=inv.username, role=inv.role, expires_at=expires_at)
+    if not user or not _verify_password(payload.password, getattr(user, "hashed_password", "")):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect credentials")
 
+    # Обновим last_login_at, если поле есть в модели.
+    if hasattr(user, "last_login_at"):
+        setattr(user, "last_login_at", datetime.utcnow())
+        db.add(user)
+        db.commit()
 
-@router.get("/invites/{code}", response_model=InviteCheckOut)
-def check_invite(code: str, db: Session = Depends(get_db)):
-    inv = db.scalar(select(UserInvite).where(UserInvite.code == code))
-    if not inv:
-        return InviteCheckOut(valid=False, reason="not_found")
-
-    if inv.used_at:
-        return InviteCheckOut(valid=False, reason="used")
-
-    if inv.expires_at <= datetime.now(timezone.utc):
-        return InviteCheckOut(valid=False, reason="expired")
-
-    return InviteCheckOut(
-        valid=True,
-        username=inv.username,
-        role=inv.role, full_name=inv.full_name,
-        store_id=inv.store_id, network=inv.network,
-        expires_at=inv.expires_at,
+    return TokenOut(
+        access_token=_create_access(user.id),
+        refresh_token=_create_refresh(user.id),
     )
 
 
-# ---------- REGISTER BY INVITE ----------
-@router.post("/register", response_model=TokenOut)
-def register_by_invite(body: RegisterByInviteIn, db: Session = Depends(get_db)):
-    inv = db.scalar(select(UserInvite).where(UserInvite.code == body.code))
-    if not inv:
-        raise HTTPException(status_code=404, detail="Invite not found")
-
-    if inv.used_at:
-        raise HTTPException(status_code=400, detail="Invite already used")
-
-    if inv.expires_at <= datetime.now(timezone.utc):
-        raise HTTPException(status_code=400, detail="Invite expired")
-
-    # username берем из инвайта, full_name — из body (если указали)
-    username = inv.username
-    full_name = (body.full_name or inv.full_name or "").strip() or None
-
-    # проверяем, что пользователя еще нет
-    exists = db.scalar(select(User).where(User.username == username))
-    if exists:
-        raise HTTPException(status_code=409, detail="User already exists")
-
-    user = User(
-        username=username,
-        full_name=full_name,
-        role=inv.role,
-        password_hash=hash_password(body.password),
-        is_active=True,
-        store_id=inv.store_id,
-        network=inv.network,
-    )
-    db.add(user)
-    # помечаем инвайт использованным
-    inv.used_at = datetime.now(timezone.utc)
-    db.commit()
-
-    token = create_access_token({"sub": user.username, "role": user.role})
-    return TokenOut(access_token=token)
-
-
-# ---------- REFRESH ----------
+# ---- /auth/refresh ----
 @router.post("/refresh", response_model=TokenOut)
-def refresh_token(current: User = Depends(get_current_user)):
-    token = create_access_token({"sub": current.username, "role": current.role})
-    return TokenOut(access_token=token)
+def refresh(payload: RefreshInput, db: Session = Depends(get_db)) -> TokenOut:
+    """
+    Обновление пары токенов по refresh-токену.
+    """
+    try:
+        data = _decode_token(payload.refresh_token)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-# ---------- BACKWARD-COMPAT: /invites/register ----------
-@router.post("/invites/register", response_model=TokenOut)
-def register_by_invite_alias(body: RegisterByInviteIn, db: Session = Depends(get_db)):
-    return register_by_invite(body=body, db=db)
+    if data.get("type") != "refresh":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
+
+    user_id = data.get("sub")
+    user = db.get(User, user_id)
+    if not user or not getattr(user, "is_active", True):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User disabled or not found")
+
+    return TokenOut(
+        access_token=_create_access(user.id),
+        refresh_token=_create_refresh(user.id),
+    )
+
+
+# ---- /auth/me ----
+@router.get("/me", response_model=UserOut)
+def me(current: User = Depends(get_current_user)) -> UserOut:
+    """
+    Текущий пользователь по access-токену.
+    """
+    return current
