@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
@@ -29,22 +29,13 @@ class RefreshInput(BaseModel):
 class InviteCreateIn(BaseModel):
     """
     Входная модель для создания инвайта.
-    - email: обязательно
-    - role: по умолчанию 'promoter' (подставь нужный дефолт)
-    - note: опционально
-    - expires_in_days: опционально, если хочешь задавать TTL в днях
-    - expires_at: опционально, можно прислать конкретную дату
     """
     email: EmailStr
-    role: str = Field(default="promoter", description="User role to be invited with")
+    role: str = Field(default="promoter", description="Role for invited user")
     note: Optional[str] = None
+    # Можно задать либо относительный срок, либо конкретную дату
     expires_in_days: Optional[int] = Field(default=7, ge=1, le=365)
     expires_at: Optional[datetime] = None
-
-
-# на всякий случай оставим старое имя, если где-то используется InviteCreate
-class InviteCreate(InviteCreateIn):
-    pass
 
 
 class InviteOut(BaseModel):
@@ -58,3 +49,8 @@ class InviteOut(BaseModel):
     created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# На случай если хендлер ожидает отдельный тип — наследуемся от InviteOut
+class InviteCreateOut(InviteOut):
+    pass
