@@ -1,9 +1,9 @@
-from __future__ import annotations
-from typing import Optional
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 class SKUOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True, extra="allow")
+    # + protected_namespaces=() — гасим конфликт с полем model_name
+    model_config = ConfigDict(from_attributes=True, extra="allow", protected_namespaces=())
     id: str
     sku: Optional[str] = None
     code: Optional[str] = None
