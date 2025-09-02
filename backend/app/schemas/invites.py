@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-# ----- INPUTS -----
+# ---------- INPUTS ----------
 class InviteCreateIn(BaseModel):
     email: EmailStr
     role: Optional[str] = None
@@ -22,7 +22,7 @@ class RegisterByInviteIn(BaseModel):
 class InviteAcceptIn(BaseModel):
     code: str
 
-# ----- OUTPUTS -----
+# ---------- OUTPUTS ----------
 class InviteCreateOut(BaseModel):
     id: int
     code: str
