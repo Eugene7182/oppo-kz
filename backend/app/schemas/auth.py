@@ -1,18 +1,18 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field
+from pydantic import ConfigDict
 
+
+# ======== AUTH ========
 
 class TokenOut(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
-    refresh_token: Optional[str] = None
-    # секунд до истечения access-токена (если отдаёшь)
-    expires_in: Optional[int] = None
 
 
 class LoginInput(BaseModel):
@@ -24,24 +24,37 @@ class RefreshInput(BaseModel):
     refresh_token: str
 
 
-class InviteCreate(BaseModel):
+# ======== INVITES ========
+
+class InviteCreateIn(BaseModel):
+    """
+    Входная модель для создания инвайта.
+    - email: обязательно
+    - role: по умолчанию 'promoter' (подставь нужный дефолт)
+    - note: опционально
+    - expires_in_days: опционально, если хочешь задавать TTL в днях
+    - expires_at: опционально, можно прислать конкретную дату
+    """
     email: EmailStr
-    # в БД это ENUM userrole; здесь оставляем str, чтобы не тянуть БД-_ENUM в код
-    role: str = Field(..., max_length=32)
-    note: Optional[str] = Field(default=None, max_length=300)
-    # можно не передавать — тогда сервер сгенерит срок годности сам
+    role: str = Field(default="promoter", description="User role to be invited with")
+    note: Optional[str] = None
+    expires_in_days: Optional[int] = Field(default=7, ge=1, le=365)
     expires_at: Optional[datetime] = None
+
+
+# на всякий случай оставим старое имя, если где-то используется InviteCreate
+class InviteCreate(InviteCreateIn):
+    pass
 
 
 class InviteOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)  # для ORM-объектов
-
     id: int
     email: EmailStr
+    code: str
     role: str
-    token: str
-    expires_at: Optional[datetime] = None
-    used_at: Optional[datetime] = None
-    created_by: Optional[int] = None
     note: Optional[str] = None
-    created_at: datetime
+    expires_at: Optional[datetime] = None
+    accepted_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
