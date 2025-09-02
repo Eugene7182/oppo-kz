@@ -32,3 +32,12 @@ for _finder, _name, _ispkg in pkgutil.iter_modules(__path__):  # type: ignore[na
         except Exception:
             # На случай динамических объектов и пр.
             continue
+            
+# Provide lowercase alias for StoreCoefficientOut for backward compatibility
+try:
+    from .store_coefficients import StoreCoefficientOut
+    storeCoefficientOut = StoreCoefficientOut  # alias for older imports
+    __all__.append("storeCoefficientOut")
+except ImportError:
+    pass
+
