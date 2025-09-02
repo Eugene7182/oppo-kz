@@ -1,9 +1,12 @@
 # backend/app/schemas/__init__.py
 
 from .auth import (
-    TokenOut, LoginInput, RefreshInput,
+    TokenOut,
+    LoginInput,
+    RefreshInput,
 )
 
+# ВАЖНО: plural — .invites
 from .invites import (
     InviteCreateIn, InviteCreateOut,
     InviteCheckIn, InviteCheckOut,
