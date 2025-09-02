@@ -1,4 +1,15 @@
-# Делает папку 'schemas' пакетом и реэкспортирует нужные модели
-from .stock_request import StockRequestCreate, StockRequestOut
+# маркер пакета app.schemas + реэкспорт схем
 
-__all__ = ["StockRequestCreate", "StockRequestOut"]
+from .auth import TokenOut, LoginInput, RefreshInput, UserOut
+from .invites import (
+    InviteCreateIn, InviteCreateOut,
+    InviteCheckIn, InviteCheckOut,
+    InviteAcceptIn, InviteAcceptOut,
+)
+
+__all__ = [
+    "TokenOut", "LoginInput", "RefreshInput", "UserOut",
+    "InviteCreateIn", "InviteCreateOut",
+    "InviteCheckIn", "InviteCheckOut",
+    "InviteAcceptIn", "InviteAcceptOut",
+]
