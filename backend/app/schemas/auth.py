@@ -1,32 +1,22 @@
 # backend/app/schemas/auth.py
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, EmailStr
+from __future__ import annotations
 
-
-class TokenOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    refresh_token: Optional[str] = None
+from pydantic import BaseModel
 
 
 class LoginInput(BaseModel):
-    email: EmailStr
+    """JSON-логин: username (или email) + пароль."""
+    username: str
     password: str
 
 
 class RefreshInput(BaseModel):
+    """Запрос на обновление access-токена по refresh-токену."""
     refresh_token: str
 
 
-# >>> ЭТОЙ МОДЕЛИ НЕ ХВАТАЛО <<<
-class RegisterByInviteIn(BaseModel):
-    """Поля под регистрацию по инвайту.
-    Делайте их под ваш фактический payload.
-    """
-    invite_code: str          # или token: str — как у вас называется
-    password: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-
-    # чтобы не падать, если прилетят лишние поля
-    model_config = ConfigDict(extra="ignore")
+class TokenOut(BaseModel):
+    """Пара токенов на выходе."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
