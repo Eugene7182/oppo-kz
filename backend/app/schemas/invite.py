@@ -1,20 +1,65 @@
-from pydantic import BaseModel, EmailStr, Field
+# backend/app/schemas/invites.py
 
-class InviteCreate(BaseModel):
-    username: str = Field(min_length=2, max_length=128)
-    role: str
-    full_name: str | None = None
-    expires_hours: int = 72
+from datetime import datetime
+from typing import Optional
 
-class InviteOut(BaseModel):
-    code: str
-    username: str
-    role: str
-    full_name: str | None = None
-    email: EmailStr | None = None
-    is_valid: bool
+from pydantic import BaseModel, ConfigDict, EmailStr
 
-class InviteRegister(BaseModel):
-    code: str
-    password: str = Field(min_length=8)
+
+# ----- INPUT SCHEMAS -----
+
+class InviteCreateIn(BaseModel):
     email: EmailStr
+    # Если роль у вас Enum в БД — здесь оставляем str, чтобы спокойно сериализовать
+    role: Optional[str] = None
+    note: Optional[str] = None
+
+
+class InviteCheckIn(BaseModel):
+    code: str
+
+
+class RegisterByInviteIn(BaseModel):
+    code: str
+    email: EmailStr
+    password: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
+class InviteAcceptIn(BaseModel):
+    code: str
+
+
+# ----- OUTPUT SCHEMAS -----
+
+class InviteCreateOut(BaseModel):
+    id: int
+    code: str
+    email: EmailStr
+    role: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InviteCheckOut(BaseModel):
+    valid: bool
+    reason: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+
+
+class InviteAcceptOut(BaseModel):
+    accepted: bool
+    user_id: Optional[int] = None
+    invited_email: Optional[EmailStr] = None
+
+
+__all__ = [
+    "InviteCreateIn", "InviteCreateOut",
+    "InviteCheckIn", "InviteCheckOut",
+    "RegisterByInviteIn",
+    "InviteAcceptIn", "InviteAcceptOut",
+]
