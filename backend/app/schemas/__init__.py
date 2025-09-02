@@ -1,4 +1,11 @@
 # backend/app/schemas/__init__.py
+# backend/app/schemas/__init__.py
+from .store import StoreIn, StoreOut
+
+__all__ = [
+    "StoreIn",
+    "StoreOut",
+]
 
 from .auth import (
     TokenOut,
