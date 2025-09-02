@@ -1,44 +1,40 @@
-# backend/app/schemas/__init__.py
-"""
-Public exports for app.schemas so that `from app.schemas import ...` works.
-"""
+# Public exports for "from app.schemas import ..."
 
 # ---- Auth schemas ----
 from .auth import (
     TokenOut,
     LoginInput,
     RefreshInput,
-    InviteCreateIn,
-    InviteCreateOut,
-    InviteCheckOut,
     RegisterByInviteIn,
 )
 
-# ---- User schemas ----
-# Поддержим и user.py, и users.py — вдруг файл назван по-разному
-try:
-    from .user import UserOut  # type: ignore
-except Exception:  # noqa: BLE001
-    from .users import UserOut  # type: ignore
+# ---- Invite schemas ----
+from .invites import (
+    InviteCreateIn,
+    InviteCreateOut,
+    InviteCheckIn,
+    InviteCheckOut,
+    InviteAcceptIn,
+    InviteAcceptOut,
+)
 
-# ---- Optional: то, что уже встречалось в логах ----
-try:
-    from .stock_request import StockRequestCreate, StockRequestOut  # type: ignore
-except Exception:
-    pass
+# ---- User schema ----
+# у тебя файл называется user.py
+from .user import UserOut
 
 __all__ = [
     # auth
     "TokenOut",
     "LoginInput",
     "RefreshInput",
+    "RegisterByInviteIn",
+    # invites
     "InviteCreateIn",
     "InviteCreateOut",
+    "InviteCheckIn",
     "InviteCheckOut",
-    "RegisterByInviteIn",
+    "InviteAcceptIn",
+    "InviteAcceptOut",
     # users
     "UserOut",
-    # stock requests (если есть)
-    "StockRequestCreate",
-    "StockRequestOut",
 ]
