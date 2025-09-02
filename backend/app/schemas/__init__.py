@@ -6,13 +6,14 @@ from .auth import (
     RefreshInput,
 )
 
-# ВАЖНО: plural — .invites
 from .invites import (
     InviteCreateIn, InviteCreateOut,
     InviteCheckIn, InviteCheckOut,
     RegisterByInviteIn,
     InviteAcceptIn, InviteAcceptOut,
 )
+
+from .users import UserOut
 
 __all__ = [
     # auth
@@ -22,4 +23,6 @@ __all__ = [
     "InviteCheckIn", "InviteCheckOut",
     "RegisterByInviteIn",
     "InviteAcceptIn", "InviteAcceptOut",
+    # users
+    "UserOut",
 ]
