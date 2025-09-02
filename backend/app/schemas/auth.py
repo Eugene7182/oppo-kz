@@ -51,6 +51,19 @@ class InviteOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# На случай если хендлер ожидает отдельный тип — наследуемся от InviteOut
 class InviteCreateOut(InviteOut):
+    """Ответ после создания инвайта (тот же payload, что и InviteOut)."""
     pass
+
+
+class InviteCheckOut(BaseModel):
+    """
+    Ответ для проверки инвайта по коду.
+    """
+    exists: bool
+    valid: bool
+    reason: Optional[str] = None  # например: "expired", "already_used", "not_found"
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    accepted_at: Optional[datetime] = None
