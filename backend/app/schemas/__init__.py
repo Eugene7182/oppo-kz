@@ -1,46 +1,34 @@
 # backend/app/schemas/__init__.py
+from __future__ import annotations
+
 """
-Единая точка ре-экспорта pydantic-схем.
-ВАЖНО: объявляем __all__ один раз и аккумулируем экспорт.
+Динамический ре-экспорт ВСЕХ pydantic-моделей из подпакета schemas.
+Любой роут, который делает: `from app.schemas import XYZ`, — теперь не упадёт,
+даже если XYZ находится в отдельном файле.
 """
 
-# --- store ---
-from .store import StoreIn, StoreOut
+import importlib
+import inspect
+import pkgutil
+from pydantic import BaseModel
 
-# --- sku ---
-from .sku import SKUOut
+__all__: list[str] = []
 
-# --- auth ---
-try:
-    from .auth import TokenOut, LoginInput, RefreshInput, RegisterByInviteIn
-except Exception:
-    TokenOut = LoginInput = RefreshInput = RegisterByInviteIn = None
-
-# --- invites ---
-try:
-    from .invites import (
-        InviteCreateIn, InviteCreateOut,
-        InviteCheckIn, InviteCheckOut,
-        RegisterByInviteIn as InviteRegisterByInviteIn,
-        InviteAcceptIn, InviteAcceptOut,
-    )
-except Exception:
-    InviteCreateIn = InviteCreateOut = InviteCheckIn = InviteCheckOut = InviteRegisterByInviteIn = InviteAcceptIn = InviteAcceptOut = None
-
-# --- users ---
-from .user import UserOut  # ВАЖНО: импорт именно из user.py (не users.py)
-
-__all__ = [
-    # store
-    "StoreIn", "StoreOut",
-    # sku
-    "SKUOut",
-    # auth (если есть)
-    "TokenOut", "LoginInput", "RefreshInput", "RegisterByInviteIn",
-    # invites (если есть)
-    "InviteCreateIn", "InviteCreateOut",
-    "InviteCheckIn", "InviteCheckOut",
-    "InviteRegisterByInviteIn", "InviteAcceptIn", "InviteAcceptOut",
-    # users
-    "UserOut",
-]
+# Проходим по всем модулям в пакете app.schemas
+for _finder, _name, _ispkg in pkgutil.iter_modules(__path__):  # type: ignore[name-defined]
+    if _name.startswith("_") or _name == "__pycache__":
+        continue
+    try:
+        mod = importlib.import_module(f"{__name__}.{_name}")
+    except Exception:
+        # Не валимся, если какой-то модуль кривой — просто пропускаем
+        continue
+    # Экспортируем все классы Pydantic-моделей
+    for attr, obj in vars(mod).items():
+        try:
+            if inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel:
+                globals()[attr] = obj
+                __all__.append(attr)
+        except Exception:
+            # На случай динамических объектов и пр.
+            continue
