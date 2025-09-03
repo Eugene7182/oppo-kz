@@ -1,0 +1,34 @@
+name: Render Monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # каждые 15 минут (UTC)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      BACKEND_SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
+      APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install requests
+      - name: Health ping
+        run: |
+          if [ -n "$APP_BASE_URL" ]; then
+            curl -fsS "$APP_BASE_URL/api/v1/health" >/dev/null && echo "Health OK"
+          fi
+      - name: Scan Render logs (last 15m) and open issues
+        run: python ops/logs_to_issues.py
