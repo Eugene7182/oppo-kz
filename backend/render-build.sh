@@ -19,6 +19,8 @@ if not ok:
     sys.exit(1)
 PY
 
+echo "=== List schemas dir ==="
+ls -la app/schemas || true
 echo "=== Import check: app.main ==="
 python - <<'PY'
 import importlib, sys, pathlib
