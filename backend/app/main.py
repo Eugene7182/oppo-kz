@@ -10,10 +10,9 @@ from typing import List
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 from app.api.v1.routes import version as version_router
-app.include_router(version_router.router, prefix="/api/v1")
+
 from .db import engine, SessionLocal
 from .models import Base, User
 from .core.security import hash_password
@@ -47,6 +46,7 @@ if SENTRY_DSN:
 app = FastAPI(title="OPPO KZ API", version="0.1.0")
 
 # -----------------------------
+app.include_router(version_router.router, prefix="/api/v1")
 # CORS
 # -----------------------------
 def _read_cors_origins() -> List[str]:
