@@ -2,9 +2,10 @@
 from __future__ import annotations
 import os
 from sqlalchemy import select
-from app.db.session import SessionLocal
-from app.models import User, UserRole
 from passlib.context import CryptContext
+
+from app.db.session import SessionLocal
+from app.models import User, UserRole  # подгони импорты под свой проект
 
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -21,7 +22,7 @@ def main():
         user = User(
             username=admin_username,
             full_name=admin_name,
-            role=UserRole.admin.value if hasattr(UserRole, "admin") else "admin",
+            role=getattr(UserRole, "admin", "admin"),
             hashed_password=pwd.hash(admin_pass),
         )
         db.add(user)
