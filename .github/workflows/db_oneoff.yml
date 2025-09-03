@@ -1,0 +1,53 @@
+name: DB One-Off
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "staging|prod"
+        required: true
+        default: "staging"
+      cmd:
+        description: "Command to run"
+        required: true
+        default: "bash -lc 'cd backend && alembic upgrade head'"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      STG: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
+      PRD: ${{ secrets.RENDER_PRODUCTION_SERVICE_ID }}
+      WHICH: ${{ github.event.inputs.service }}
+      CMD: ${{ github.event.inputs.cmd }}
+    steps:
+      - name: Pick service id
+        id: pick
+        run: |
+          if [ "$WHICH" = "prod" ]; then echo "id=$PRD" >> $GITHUB_OUTPUT; else echo "id=$STG" >> $GITHUB_OUTPUT; fi
+      - name: Start job
+        id: start
+        run: |
+          set -e
+          SID="${{ steps.pick.outputs.id }}"
+          JOB_ID=$(curl -sS -X POST \
+            "https://api.render.com/v1/services/${SID}/jobs" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            --data "{\"startCommand\":\"${CMD}\"}" | jq -r '.id')
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+      - name: Wait for completion
+        env: { JOB_ID: ${{ steps.start.outputs.job_id }} }
+        run: |
+          set -e
+          for i in $(seq 1 180); do
+            STATUS=$(curl -sS \
+              "https://api.render.com/v1/services/${{ steps.pick.outputs.id }}/jobs/${JOB_ID}" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}" | jq -r '.status')
+            echo "status: $STATUS"
+            if [ "$STATUS" = "succeeded" ]; then exit 0; fi
+            if [ "$STATUS" = "failed" ] || [ "$STATUS" = "canceled" ]; then exit 1; fi
+            sleep 5
+          done
+          echo "Timeout"; exit 1
