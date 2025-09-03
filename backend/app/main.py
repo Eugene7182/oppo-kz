@@ -1,57 +1,29 @@
-from __future__ import annotations
-import logging
-from fastapi import FastAPI, Response
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-
-from app.core.config import PROJECT_NAME, PROJECT_VERSION, CORS_ORIGINS, ADMIN_EMAIL, ADMIN_PASSWORD
-from app.core.security import get_password_hash
-from app.db.session import SessionLocal, engine
-from app.db.base_class import Base
-from app.db.models.user import User
-from app.db.models.invite import Invite  # noqa: F401
-from app.api.v1.api import api_router
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
-app = FastAPI(title=PROJECT_NAME, version=PROJECT_VERSION)
-
-if CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=CORS_ORIGINS,
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-@app.get("/health", include_in_schema=False)
-def health_root():
-    return {"status": "ok"}
-
-@app.head("/", include_in_schema=False)
-def head_root():
-    return Response(status_code=200)
-
-app.include_router(api_router, prefix="/api/v1")
-
 def _ensure_users_table_schema() -> None:
+    """
+    Авто-ремонт схемы без потери данных:
+    - снимаем FK на users(id), приводим зависимые колонки к VARCHAR(36), конвертируем users.id -> VARCHAR(36)
+    - добавляем недостающие поля (full_name, password_hash, is_active, role)
+    - если role имеет enum-тип (userrole и т.п.), конвертируем в VARCHAR(20)
+    - аналогично правим invites.role, если там enum
+    - гарантируем уникальный индекс на users.email
+    """
     with engine.begin() as conn:
+        # ---------- users: список колонок ----------
         rows = conn.execute(text("""
-            SELECT column_name, data_type, column_default
+            SELECT column_name, data_type, udt_name, column_default
             FROM information_schema.columns
             WHERE table_schema = 'public' AND table_name = 'users'
         """)).mappings().all()
         cols = {r["column_name"]: r for r in rows}
+
         if not cols:
-            logger.info("users table not found; create_all will create it")
+            logger.info("users table not found in public schema (will be created by create_all)")
             return
 
+        # ---------- users.id: integer -> varchar(36) с учётом FK ----------
         id_info = cols.get("id")
         if id_info and id_info["data_type"] in ("integer", "bigint"):
-            # найти все FK на users(id), снять их, привести типы, затем конвертировать id
+            logger.warning("users.id is %s — converting to VARCHAR(36) with FK handling", id_info["data_type"])
             fk_rows = conn.execute(text("""
                 SELECT con.conname AS constraint_name, rel_t.relname AS table_name, att2.attname AS column_name
                 FROM pg_constraint con
@@ -60,25 +32,62 @@ def _ensure_users_table_schema() -> None:
                 JOIN pg_attribute att2 ON att2.attrelid = con.conrelid AND att2.attnum = fk.attnum
                 WHERE con.contype='f' AND con.confrelid='public.users'::regclass
             """)).mappings().all()
+
             for r in fk_rows:
+                logger.warning('Dropping FK %s on %s(%s)', r["constraint_name"], r["table_name"], r["column_name"])
                 conn.execute(text(f'ALTER TABLE public."{r["table_name"]}" DROP CONSTRAINT "{r["constraint_name"]}"'))
+
             for r in fk_rows:
+                logger.warning('Altering type %s.%s -> VARCHAR(36)', r["table_name"], r["column_name"])
                 conn.execute(text(f'ALTER TABLE public."{r["table_name"]}" ALTER COLUMN "{r["column_name"]}" TYPE VARCHAR(36) USING "{r["column_name"]}"::varchar'))
+
             if id_info["column_default"]:
                 conn.execute(text("ALTER TABLE public.users ALTER COLUMN id DROP DEFAULT"))
             conn.execute(text("ALTER TABLE public.users ALTER COLUMN id TYPE VARCHAR(36) USING id::varchar"))
             logger.info("users.id converted to VARCHAR(36)")
 
+        # ---------- users.role: если enum (USER-DEFINED), переводим в VARCHAR(20) ----------
+        role_info = cols.get("role")
+        if role_info and role_info["data_type"] == "USER-DEFINED":
+            logger.warning("users.role is enum (%s) — converting to VARCHAR(20)", role_info.get("udt_name"))
+            conn.execute(text("ALTER TABLE public.users ALTER COLUMN role TYPE VARCHAR(20) USING role::text"))
+
+        # ---------- добавляем недостающие колонки ----------
         if "full_name" not in cols:
+            logger.warning("users.full_name is missing — adding")
             conn.execute(text("ALTER TABLE public.users ADD COLUMN full_name VARCHAR(255) NULL"))
+
         if "password_hash" not in cols and "hashed_password" in cols:
+            logger.warning("users.hashed_password found — renaming to password_hash")
             conn.execute(text('ALTER TABLE public.users RENAME COLUMN "hashed_password" TO "password_hash"'))
+            cols["password_hash"] = {"column_name": "password_hash", "data_type": "character varying", "udt_name": "varchar", "column_default": None}
+
         if "password_hash" not in cols and "hashed_password" not in cols:
+            logger.warning("users.password_hash is missing — adding")
             conn.execute(text("ALTER TABLE public.users ADD COLUMN password_hash VARCHAR(255) NOT NULL DEFAULT ''"))
+
         if "is_active" not in cols:
+            logger.warning("users.is_active is missing — adding with default true")
             conn.execute(text("ALTER TABLE public.users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true"))
+
         if "role" not in cols:
+            logger.warning("users.role is missing — adding with default 'admin'")
             conn.execute(text("ALTER TABLE public.users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'admin'"))
+
+        # ---------- invites.role: если enum — тоже конвертируем ----------
+        inv_cols = conn.execute(text("""
+            SELECT column_name, data_type, udt_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'invites'
+        """)).mappings().all()
+        if inv_cols:
+            inv_cols_map = {r["column_name"]: r for r in inv_cols}
+            inv_role = inv_cols_map.get("role")
+            if inv_role and inv_role["data_type"] == "USER-DEFINED":
+                logger.warning("invites.role is enum (%s) — converting to VARCHAR(20)", inv_role.get("udt_name"))
+                conn.execute(text("ALTER TABLE public.invites ALTER COLUMN role TYPE VARCHAR(20) USING role::text"))
+
+        # ---------- уникальный индекс на email ----------
         conn.execute(text("""
             DO $$
             BEGIN
@@ -90,31 +99,3 @@ def _ensure_users_table_schema() -> None:
                 END IF;
             END$$;
         """))
-
-def seed_admin(db: Session) -> None:
-    admin = db.query(User).filter(User.email == ADMIN_EMAIL).first()
-    if admin:
-        return
-    admin = User(
-        email=ADMIN_EMAIL,
-        full_name="Administrator",
-        role="admin",
-        password_hash=get_password_hash(ADMIN_PASSWORD),
-        is_active=True,
-    )
-    db.add(admin)
-    db.commit()
-    logger.info("Seeded admin user %s", ADMIN_EMAIL)
-
-@app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(bind=engine)
-    logger.info("create_all completed")
-    try:
-        _ensure_users_table_schema()
-        logger.info("users table schema ensured")
-    except Exception as exc:
-        logger.exception("users table schema ensure failed: %s", exc)
-    with SessionLocal() as db:
-        seed_admin(db)
-    logger.info("Startup completed")
