@@ -1,7 +1,6 @@
-# backend/app/core/security.py
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
-import jwt  # PyJWT
+import jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
