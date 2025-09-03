@@ -5,19 +5,7 @@ on:
     branches: [ "main" ]
   workflow_dispatch: {}
 
-permissions:# job: deploy
-env:
-  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-  SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID || secrets.RENDER_STAGING_SERVICE_ID || secrets.RENDER_PRODUCTION_SERVICE_ID }}
-  APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL || secrets.STAGING_APP_BASE_URL || secrets.APP_BASE_URL }}
-
-# job: smoke
-env:
-  APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL || secrets.STAGING_APP_BASE_URL || secrets.APP_BASE_URL }}
-  FRONT_URL: ${{ secrets.PROD_FRONT_URL || secrets.STAGING_FRONT_URL || secrets.FRONT_URL }}
-  ADMIN_USER: ${{ secrets.ADMIN_USER }}
-  ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
-
+permissions:
   contents: read
 
 concurrency:
@@ -30,9 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-      # берём любой доступный SERVICE_ID (стейдж или прод)
       SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID || secrets.RENDER_STAGING_SERVICE_ID || secrets.RENDER_PRODUCTION_SERVICE_ID }}
-      # URL бэка: prod если есть, иначе staging, иначе общий APP_BASE_URL
       APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL || secrets.STAGING_APP_BASE_URL || secrets.APP_BASE_URL }}
     steps:
       - uses: actions/checkout@v4
@@ -43,18 +29,11 @@ jobs:
           echo "APP_BASE_URL=${APP_BASE_URL:-<empty>}"
 
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Early check secrets/vars
-        run: |
-          python - << 'PY'
-          import os, sys
-          miss=[]
-          if not os.getenv("RENDER_API_KEY"): miss.append("RENDER_API_KEY")
-          if not os.getenv("SERVICE_ID"): miss.append("SERVICE_ID (RENDER_*_SERVICE_ID)")
-          if miss:
-              print("❌ Missing:", ", ".join(miss), file=sys.stderr); sys.exit(1)
-          print("✅ Secrets/vars OK")
-          PY
+        with:
+          python-version: "3.11"
+
+      - name: Check secrets
+        run: python ops/check_secrets.py
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -75,7 +54,8 @@ jobs:
           echo "Triggered deploy: $DEPLOY_ID"
 
       - name: Wait until live
-        env: { DEPLOY_ID: ${{ steps.kick.outputs.deploy_id }} }
+        env:
+          DEPLOY_ID: ${{ steps.kick.outputs.deploy_id }}
         run: |
           set -e
           for i in $(seq 1 120); do
@@ -101,7 +81,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - name: Install requests
         run: pip install requests
       - name: Print targets
