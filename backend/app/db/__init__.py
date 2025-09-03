@@ -1,1 +1,1 @@
-# Package marker for app.db. Intentionally empty.
+# app.db package marker
