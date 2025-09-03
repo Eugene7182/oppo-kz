@@ -1,0 +1,45 @@
+name: Render One-Off Job
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Команда для one-off job (пример: python -m app.scripts.ensure_admin)"
+        required: true
+        default: "python -m app.scripts.ensure_admin"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_BACKEND_SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
+      CMD: ${{ github.event.inputs.command }}
+    steps:
+      - name: Start job
+        id: start
+        run: |
+          set -e
+          echo "Command: ${CMD}"
+          JOB_ID=$(curl -sS -X POST \
+            "https://api.render.com/v1/services/${RENDER_BACKEND_SERVICE_ID}/jobs" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            --data "{\"startCommand\":\"${CMD}\"}" | jq -r '.id')
+          echo "job_id=${JOB_ID}" >> $GITHUB_OUTPUT
+          echo "Started job: $JOB_ID"
+      - name: Wait for completion
+        env:
+          JOB_ID: ${{ steps.start.outputs.job_id }}
+        run: |
+          set -e
+          for i in $(seq 1 180); do
+            STATUS=$(curl -sS \
+              "https://api.render.com/v1/services/${RENDER_BACKEND_SERVICE_ID}/jobs/${JOB_ID}" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}" | jq -r '.status')
+            echo "status: $STATUS"
+            if [ "$STATUS" = "succeeded" ]; then exit 0; fi
+            if [ "$STATUS" = "failed" ] || [ "$STATUS" = "canceled" ]; then exit 1; fi
+            sleep 5
+          done
+          echo "Timeout waiting job"; exit 1
