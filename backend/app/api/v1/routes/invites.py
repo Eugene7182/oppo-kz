@@ -1,25 +1,45 @@
-# backend/app/api/v1/routes/invites.py
-from fastapi import APIRouter, HTTPException, status
+import secrets
+from datetime import datetime, timedelta, timezone
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-# Важно: префикс относительный. Глобальный "/api/v1" задаётся в main.py
-router = APIRouter(prefix="/invites", tags=["invites"])
+from app.core.authz import require_roles
+from app.core.security import get_db, get_password_hash
+from app.db.models.invite import Invite
+from app.db.models.user import User
+from app.schemas.invite import InviteCreateIn, InviteOut, InviteCheckOut, InviteRegisterIn
 
-@router.get("/_health", summary="Invites router is loaded")
-def invites_health():
-    return {"status": "ok", "module": "invites"}
+router = APIRouter(prefix="/auth/invites", tags=["auth"])
 
-# Временные заглушки, чтобы не падать. Рабочую реализацию добавим далее.
-@router.post("", summary="Create invite (stub)")
-def create_invite_stub():
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                        detail="Invites: implement create")
+def _gen_code() -> str:
+    return secrets.token_urlsafe(10)
 
-@router.get("/{code}", summary="Check invite (stub)")
-def check_invite_stub(code: str):
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                        detail="Invites: implement check")
+@router.post("", response_model=InviteOut, summary="Создать инвайт (admin)")
+def create_invite(data: InviteCreateIn, db: Session = Depends(get_db), _=Depends(require_roles("admin"))):
+    code = _gen_code()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=data.expires_hours)
+    inv = Invite(code=code, email=str(data.email), role=data.role, full_name=data.full_name, expires_at=expires_at, used=False)
+    db.add(inv); db.commit(); db.refresh(inv)
+    return InviteOut(code=inv.code, email=inv.email, role=inv.role, full_name=inv.full_name, expires_at=inv.expires_at)
 
-@router.post("/register", summary="Register by invite (stub)")
-def register_by_invite_stub():
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                        detail="Invites: implement register")
+@router.get("/{code}", response_model=InviteCheckOut, summary="Проверить инвайт по коду")
+def check_invite(code: str, db: Session = Depends(get_db)):
+    inv = db.query(Invite).filter(Invite.code == code).first()
+    if not inv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
+    status_str = "used" if inv.used else ("expired" if datetime.now(timezone.utc) >= inv.expires_at else "valid")
+    return InviteCheckOut(code=inv.code, status=status_str, email=inv.email, role=inv.role, full_name=inv.full_name, expires_at=inv.expires_at)
+
+@router.post("/register", summary="Зарегистрироваться по инвайту")
+def register_by_invite(data: InviteRegisterIn, db: Session = Depends(get_db)):
+    inv = db.query(Invite).filter(Invite.code == data.code).first()
+    if not inv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
+    now = datetime.now(timezone.utc)
+    if inv.used: raise HTTPException(status_code=400, detail="Invite already used")
+    if now >= inv.expires_at: raise HTTPException(status_code=400, detail="Invite expired")
+    if db.query(User).filter(User.email == inv.email).first():
+        raise HTTPException(status_code=409, detail="User already exists")
+    user = User(email=inv.email, full_name=inv.full_name, role=inv.role, password_hash=get_password_hash(data.password), is_active=True)
+    db.add(user); inv.used = True; db.add(inv); db.commit()
+    return {"status": "registered", "email": user.email, "role": user.role}
