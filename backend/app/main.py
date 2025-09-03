@@ -12,7 +12,8 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
-from .api.v1.api import api_router
+from app.api.v1.routes import version as version_router
+app.include_router(version_router.router, prefix="/api/v1")
 from .db import engine, SessionLocal
 from .models import Base, User
 from .core.security import hash_password
