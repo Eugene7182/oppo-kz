@@ -1,0 +1,35 @@
+.github/workflows/autofix.ymlname: Safe Autofix (PR)
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 6 * * 1"   # раз в неделю, по понедельникам
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "main" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Run autofix
+        run: |
+          python ops/autofix_example.py
+          git status --porcelain | wc -l > changed.txt
+      - name: Create PR if changed
+        if: ${{ hashFiles('changed.txt') != '' && fromJSON(steps.num.outputs.lines || '1') == 1 }}
+        run: echo done
+      - name: Detect changes
+        id: num
+        run: echo "lines=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
+      - name: Create Pull Request
+        if: ${{ steps.num.outputs.lines != '0' }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(autofix): ensure VITE_API_URL fallback"
+          title: "Autofix: ensure VITE_API_URL fallback"
+          body: "Автоматический безопасный фикс. Проверь и смёржи."
+          branch: "autofix/vite-api-url"
+          base: "main"
