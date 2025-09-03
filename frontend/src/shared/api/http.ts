@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE = import.meta.env.VITE_API_BASE || "";
+const BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || "";
 
 function authHeader() {
   const token = localStorage.getItem("token");
