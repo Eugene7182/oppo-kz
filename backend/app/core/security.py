@@ -11,7 +11,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from ..db import SessionLocal
+from ..db import SessionLocal, get_db
 from ..models import User
 
 
@@ -72,12 +72,7 @@ def _auth_error(detail: str, code: int = status.HTTP_401_UNAUTHORIZED):
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-def get_current_user(
-    cred: HTTPAuthorizationCredentials = Depends(_bearer),
-    db: Session = Depends(get_db),
-) -> User:
-    """
-    Достаёт пользователя из заголовка Authorization: Bearer <jwt>.
+ пользователя из заголовка Authorization: Bearer <jwt>.
     Кладём в токен поля: sub (username), role.
     """
     if cred is None or not cred.scheme or cred.scheme.lower() != "bearer":
