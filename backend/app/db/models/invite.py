@@ -1,4 +1,3 @@
-# backend/app/db/models/invite.py
 from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
@@ -8,7 +7,6 @@ from app.db.base_class import Base
 
 class Invite(Base):
     __tablename__ = "invites"
-    # Индексы для create_all (будут созданы без Alembic)
     __table_args__ = (
         Index("ix_invites_email", "email"),
         Index("ix_invites_active", "email", "used"),
@@ -22,7 +20,5 @@ class Invite(Base):
 
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)  # email создателя
