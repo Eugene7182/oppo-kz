@@ -40,7 +40,8 @@ try:
     storeCoefficientOut = StoreCoefficientOut  # alias for older imports
     __all__.append("storeCoefficientOut")
 except ImportError:
- 
+
+        pass
 # Provide aliases for BonusCalc models and backward compatibility
 try:
     from app.core_schemas import (
