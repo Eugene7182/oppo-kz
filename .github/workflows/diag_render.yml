@@ -1,0 +1,25 @@
+name: Diagnose Render
+on: { workflow_dispatch: {} }
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID || secrets.RENDER_STAGING_SERVICE_ID || secrets.RENDER_PRODUCTION_SERVICE_ID }}
+      APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL || secrets.STAGING_APP_BASE_URL || secrets.APP_BASE_URL }}
+    steps:
+      - name: Check inputs
+        run: |
+          test -n "$RENDER_API_KEY" || (echo "No RENDER_API_KEY" && exit 1)
+          test -n "$SERVICE_ID" || (echo "No SERVICE_ID (RENDER_*_SERVICE_ID)" && exit 1)
+          echo "SERVICE_ID=$SERVICE_ID"
+          echo "APP_BASE_URL=${APP_BASE_URL:-<empty>}"
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: GET service info
+        run: |
+          curl -sS "https://api.render.com/v1/services/${SERVICE_ID}" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" | jq '{id,name,type,serviceDetails:{env,region}}'
+      - name: Health probe (if URL provided)
+        if: ${{ env.APP_BASE_URL != '' }}
+        run: curl -fsS "${APP_BASE_URL}/api/v1/health"
