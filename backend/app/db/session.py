@@ -1,5 +1,3 @@
-# backend/app/db/session.py
-from __future__ import annotations
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.core.config import DATABASE_URL
