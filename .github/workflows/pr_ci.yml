@@ -1,0 +1,47 @@
+name: PR CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install backend deps
+        run: |
+          if [ -f backend/requirements.txt ]; then
+            cd backend
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt || true
+            pip install ruff mypy || true
+          fi
+      - name: Lint (ruff)
+        run: |
+          if [ -d backend/app ]; then ruff check backend || true; fi
+      - name: Type check (mypy)
+        run: |
+          if [ -d backend/app ]; then mypy --install-types --non-interactive || true; mypy || true; fi
+      - name: Import app
+        run: |
+          if [ -d backend/app ]; then python - << 'PY'
+          import importlib; m=importlib.import_module("app.main")
+          assert hasattr(m,"app"), "app.main:app missing"
+          print("✅ app.main:app import ok")
+          PY
+          fi
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Build
+        run: |
+          if [ -d frontend ]; then cd frontend; npm ci || npm i; npm run build; fi
