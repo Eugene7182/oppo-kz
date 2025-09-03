@@ -44,3 +44,13 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 __all__ = ["engine", "SessionLocal", "DATABASE_URL", "get_db"]
+
+
+def to_float(value: Any) -> float: 
+        """Convert a value to float, returning 0.0 on failure."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+__all__.append("to_float")
