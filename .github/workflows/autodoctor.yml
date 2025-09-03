@@ -1,0 +1,76 @@
+name: AutoDoctor (Render logs → auto-fix)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "push (прямо в main) или pr (создать Pull Request)"
+        required: true
+        default: "push"
+  schedule:
+    - cron: "*/30 * * * *"   # каждые 30 минут
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autodoctor:
+    runs-on: ubuntu-latest
+    env:
+      MODE: ${{ github.event.inputs.mode || 'push' }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_BACKEND_SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID || secrets.RENDER_STAGING_SERVICE_ID }}
+      APP_BASE_URL: ${{ secrets.APP_BASE_URL || secrets.STAGING_APP_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+
+      - name: Install deps
+        run: pip install requests
+
+      - name: Run AutoDoctor
+        id: run
+        run: |
+          python ops/auto_doctor.py || echo "AUTODOCTOR_EXIT=$?" >> $GITHUB_OUTPUT
+          git status --porcelain | tee /tmp/changes.txt
+          echo "changed=$(wc -l < /tmp/changes.txt)" >> $GITHUB_OUTPUT
+
+      - name: Configure git
+        run: |
+          git config user.name "oppo-autobot"
+          git config user.email "autobot@users.noreply.github.com"
+
+      - name: Commit changes (to branch)
+        if: steps.run.outputs.changed != '0' && env.MODE != 'push'
+        run: |
+          BR="autofix/$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BR"
+          git add -A
+          git commit -m "chore(autofix): apply fixes from Render logs"
+          git push origin "$BR"
+
+      - name: Open Pull Request
+        if: steps.run.outputs.changed != '0' && env.MODE != 'push'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "Autofix: apply fixes from Render logs"
+          body: "Автоматические правки по сигнатурам ошибок из Render."
+          branch: ${{ github.ref_name }}
+          base: main
+
+      - name: Commit changes (direct push to main)
+        if: steps.run.outputs.changed != '0' && env.MODE == 'push'
+        run: |
+          git add -A
+          git commit -m "chore(autofix): apply fixes from Render logs"
+          git push origin main
+
+      - name: No changes
+        if: steps.run.outputs.changed == '0'
+        run: echo "No changes to commit"
