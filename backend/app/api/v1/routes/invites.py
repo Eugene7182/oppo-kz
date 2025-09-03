@@ -7,7 +7,7 @@ from app.core.authz import require_roles
 from app.core.security import get_db, get_password_hash
 from app.db.models.invite import Invite
 from app.db.models.user import User
-from app.schemas.invite import InviteCreateIn, InviteOut, InviteCheckOut, InviteRegisterIn
+from app.schemas.invites import InviteCreateIn, InviteOut, InviteCheckOut, InviteRegisterIn
 
 router = APIRouter(prefix="/auth/invites", tags=["auth"])
 
