@@ -71,25 +71,23 @@ def _auth_error(detail: str, code: int = status.HTTP_401_UNAUTHORIZED):
         detail=detail,
         headers={"WWW-Authenticate": "Bearer"},
     )
+   
+    # #turn user
 
- пользователя из заголовка Authorization: Bearer <jwt>.
-    Кладём в токен поля: sub (username), role.
-    """
-    if cred is None or not cred.scheme or cred.scheme.lower() != "bearer":
-        _auth_error("Not authenticated")
-
-    payload = decode_token(cred.credentials)
-    if not payload:
-        _auth_error("Invalid or expired token")
-
+async def get_current_user(
+    token: HTTPAuthorizationCredentials = Depends(_bearer),
+    db: Session = Depends(get_db),
+) -> User:
+    try:
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        _auth_error("Could not validate credentials")
     username = payload.get("sub")
-    if not username:
-        _auth_error("Invalid token payload")
-
-    user = db.query(User).filter(User.username == username).first()
-    if not user or not getattr(user, "is_active", True):
-        _auth_error("User not found or inactive")
-
+    if username is None:
+        _auth_error("Missing subject in token")
+    user = db.query(User).filter(User.email == username).first()
+    if user is None:
+        _auth_error("User not found")
     return user
 
 
