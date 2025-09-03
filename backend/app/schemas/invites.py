@@ -17,7 +17,7 @@ class InviteOut(BaseModel):
 
 class InviteCheckOut(BaseModel):
     code: str
-    status: str
+    status: str  # "valid" | "used" | "expired"
     email: EmailStr
     role: str
     full_name: str | None
