@@ -1,51 +1,28 @@
-# backend/app/schemas/invites.py
+from __future__ import annotations
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
-# ---------- INPUTS ----------
 class InviteCreateIn(BaseModel):
     email: EmailStr
-    role: Optional[str] = None
-    note: Optional[str] = None
+    role: str = "promoter"
+    full_name: str | None = None
+    expires_hours: int = Field(default=72, ge=1, le=24*14)
 
-class InviteCheckIn(BaseModel):
-    code: str
-
-class RegisterByInviteIn(BaseModel):
+class InviteOut(BaseModel):
     code: str
     email: EmailStr
-    password: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-
-class InviteAcceptIn(BaseModel):
-    code: str
-
-# ---------- OUTPUTS ----------
-class InviteCreateOut(BaseModel):
-    id: int
-    code: str
-    email: EmailStr
-    role: Optional[str] = None
-    expires_at: Optional[datetime] = None
-    created_at: datetime
-    model_config = ConfigDict(from_attributes=True)
+    role: str
+    full_name: str | None
+    expires_at: datetime
 
 class InviteCheckOut(BaseModel):
-    valid: bool
-    reason: Optional[str] = None
-    email: Optional[EmailStr] = None
-    role: Optional[str] = None
+    code: str
+    status: str
+    email: EmailStr
+    role: str
+    full_name: str | None
+    expires_at: datetime
 
-class InviteAcceptOut(BaseModel):
-    accepted: bool
-    user_id: Optional[int] = None
-    invited_email: Optional[EmailStr] = None
-
-__all__ = [
-    "InviteCreateIn", "InviteCreateOut",
-    "InviteCheckIn", "InviteCheckOut",
-    "RegisterByInviteIn",
-    "InviteAcceptIn", "InviteAcceptOut",
-]
+class InviteRegisterIn(BaseModel):
+    code: str
+    password: str
