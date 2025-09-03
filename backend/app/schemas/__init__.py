@@ -1,7 +1,5 @@
-f
-# backend/app/schemas/__init__.py
+f# backend/app/schemas/__init__.py
 from __future__ import annotations
-
 """
 Динамический ре-экспорт ВСЕХ pydantic-моделей из подпакета schemas.
 Любой роут, который делает: `from app.schemas import XYZ`, — теперь не упадёт,
