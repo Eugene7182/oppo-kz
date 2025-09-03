@@ -53,5 +53,4 @@ def to_float(value: Any) -> float:
     except (TypeError, ValueError):
         return 0.0
 
-__all__.append("to_float")
-
+__all__ = ["Base"]
