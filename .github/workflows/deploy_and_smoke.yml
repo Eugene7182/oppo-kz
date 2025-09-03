@@ -5,7 +5,19 @@ on:
     branches: [ "main" ]
   workflow_dispatch: {}
 
-permissions:
+permissions:# job: deploy
+env:
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  SERVICE_ID: ${{ secrets.RENDER_BACKEND_SERVICE_ID || secrets.RENDER_STAGING_SERVICE_ID || secrets.RENDER_PRODUCTION_SERVICE_ID }}
+  APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL || secrets.STAGING_APP_BASE_URL || secrets.APP_BASE_URL }}
+
+# job: smoke
+env:
+  APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL || secrets.STAGING_APP_BASE_URL || secrets.APP_BASE_URL }}
+  FRONT_URL: ${{ secrets.PROD_FRONT_URL || secrets.STAGING_FRONT_URL || secrets.FRONT_URL }}
+  ADMIN_USER: ${{ secrets.ADMIN_USER }}
+  ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
+
   contents: read
 
 concurrency:
