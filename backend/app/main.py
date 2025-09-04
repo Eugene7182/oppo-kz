@@ -267,7 +267,7 @@ def seed_admin(db: Session) -> None:
                 text(
                     """
                     INSERT INTO public.users (email, full_name, role, password_hash, is_active)
-                    VALUES (:email, :full_name, :role::userrole, :pwd, true)
+                    VALUES (:email, :full_name, CAST(:role AS userrole), :pwd, true)
                     ON CONFLICT (email) DO NOTHING
                     """
                 ),
