@@ -5,9 +5,7 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: >
-      alembic upgrade head &&
-      gunicorn app.main:app -k uvicorn.workers.UvicornWorker
-      -b 0.0.0.0:$PORT --workers 2 --timeout 120 --keep-alive 30 --access-logfile -
+      export PYTHONPATH="$(pwd)" && alembic -c alembic.ini upgrade head && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: ENV
         value: prod

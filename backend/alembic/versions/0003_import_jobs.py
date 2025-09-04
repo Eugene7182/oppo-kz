@@ -1,11 +1,12 @@
-
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
+
 revision = "0003_import_jobs"
-down_revision = "0002_indexes"
+down_revision = "0001_create_users"
 branch_labels = None
 depends_on = None
+
 
 def upgrade():
     op.create_table(
@@ -14,14 +15,15 @@ def upgrade():
         sa.Column("type", sa.String(length=50), nullable=False),
         sa.Column("filename", sa.String(length=255), nullable=False),
         sa.Column("status", sa.String(length=20), nullable=False, server_default="queued"),
-        sa.Column("progress", sa.Integer, nullable=False, server_default="0"),
-        sa.Column("total", sa.Integer, nullable=False, server_default="0"),
-        sa.Column("processed", sa.Integer, nullable=False, server_default="0"),
+        sa.Column("progress", sa.Integer, nullable=False, server_default=sa.text("0")),
+        sa.Column("total", sa.Integer, nullable=False, server_default=sa.text("0")),
+        sa.Column("processed", sa.Integer, nullable=False, server_default=sa.text("0")),
         sa.Column("error", sa.Text, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
     )
     op.create_index("ix_import_jobs_status", "import_jobs", ["status"])
+
 
 def downgrade():
     op.drop_index("ix_import_jobs_status", table_name="import_jobs")

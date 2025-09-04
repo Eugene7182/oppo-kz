@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """bootstrap core tables: users, stores, skus, bonus_grids"""
 
+import sqlalchemy as sa  # noqa: F401
+
 from alembic import op
 
 # Эта миграция идёт сразу ПОСЛЕ userrole

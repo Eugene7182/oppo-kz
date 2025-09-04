@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """widen alembic_version.version_num to 255"""
 
+import sqlalchemy as sa  # noqa: F401
+
 from alembic import op
 
 # Короткий revision, чтобы поместился в старые 32 символа
