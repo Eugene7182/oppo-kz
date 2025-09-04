@@ -5,7 +5,8 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 # ТРИ точки: app.api.v1 -> up2 -> app
-from ...core.security import get_db as _get_db, get_current_user, require_roles
+from ...core.security import get_db as _get_db, get_current_user
+from ...security_rbac import require_roles
 from ...models import User
 
 def get_db() -> Session:
