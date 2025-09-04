@@ -1,12 +1,15 @@
+// Единый HTTP-клиент с валидацией URL и автоподстановкой Bearer токена.
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL as string
-if (!API_URL) throw new Error('VITE_API_URL is not set')
+const raw = (import.meta.env.VITE_API_URL ?? '').trim()
+
+if (!/^https?:\/\//i.test(raw)) {
+  throw new Error(`VITE_API_URL must start with http(s)://, got "${raw || '<empty>'}"`)
+}
 
 export const http = axios.create({
-  baseURL: API_URL,
+  baseURL: raw.replace(/\/+$/, ''), // без trailing slash
   timeout: 15000,
-  withCredentials: false,
 })
 
 http.interceptors.request.use((config) => {
@@ -18,7 +21,10 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (r) => r,
   (err) => {
-    // TODO: показать toast/уведомление, или редирект на /login при 401
+    // Дадим понятный текст вместо «Network Error»
+    if (!err.response) {
+      err.message = 'Сетевая ошибка или CORS-блокировка. Проверь CORS_ORIGINS и VITE_API_URL.'
+    }
     return Promise.reject(err)
   }
 )
