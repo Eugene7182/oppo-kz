@@ -18,6 +18,7 @@ dist/
 .pytest_cache/
 
 # Node
+node_modules/
 frontend/node_modules/
 
 # IDE

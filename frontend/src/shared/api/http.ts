@@ -84,7 +84,6 @@ export const api = {
     }) => http.put(`/api/v1/bonus/${id}`, body),
     remove: (id: number) => http.delete(`/api/v1/bonus/${id}`),
   },
-,
   audit: {
     list: () => http.get("/api/v1/audit"),
   },
