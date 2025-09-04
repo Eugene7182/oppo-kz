@@ -51,6 +51,8 @@ def create_all() -> None:
 
 
 def _column_exists(schema: str, table: str, column: str) -> bool:
+    if engine.dialect.name != "postgresql":
+        return False
     with engine.connect() as conn:
         row = conn.execute(
             text(
@@ -68,6 +70,8 @@ def _column_exists(schema: str, table: str, column: str) -> bool:
 
 
 def _get_column_type(schema: str, table: str, column: str) -> Optional[str]:
+    if engine.dialect.name != "postgresql":
+        return None
     with engine.connect() as conn:
         row = conn.execute(
             text(
@@ -93,6 +97,8 @@ def _ensure_users_table_schema() -> None:
       - is_active BOOLEAN DEFAULT TRUE
       - индекс на email
     """
+    if engine.dialect.name != "postgresql":
+        return
     with engine.begin() as conn:
         # full_name
         if not _column_exists("public", "users", "full_name"):
@@ -132,6 +138,8 @@ def _ensure_users_role_varchar() -> None:
     Приводим users.role из enum userrole в VARCHAR(20),
     чтобы ORM мог писать строки ('admin', 'promoter', 'supervisor', 'office').
     """
+    if engine.dialect.name != "postgresql":
+        return
     with engine.begin() as conn:
         # Узнаем текущий тип
         row = conn.execute(
@@ -182,6 +190,8 @@ def _ensure_users_id_varchar36() -> None:
     Безопасно приводим users.id к VARCHAR(36), если он ещё integer.
     Если есть FK из invites.invited_by → users.id, временно снимаем fk.
     """
+    if engine.dialect.name != "postgresql":
+        return
     with engine.begin() as conn:
         row = conn.execute(
             text("""
@@ -249,8 +259,30 @@ def seed_admin(db: Session) -> None:
         return
 
     pwd_hash = get_password_hash(ADMIN_PASSWORD)
+
+    col_type = _get_column_type("public", "users", "role")
+    if col_type and str(col_type).upper() == "USER-DEFINED":
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO public.users (email, full_name, role, password_hash, is_active)
+                    VALUES (:email, :full_name, :role::userrole, :pwd, true)
+                    ON CONFLICT (email) DO NOTHING
+                    """
+                ),
+                {
+                    "email": email,
+                    "full_name": "Administrator",
+                    "role": "admin",
+                    "pwd": pwd_hash,
+                },
+            )
+        print(f"INFO:app.main:seed_admin inserted {email} with enum role")
+        return
+
     admin = User(
-        id=None,  # пусть БД/ORM назначит, если у вас UUID по умолчанию в модели
+        id=None,
         email=email,
         full_name="Administrator",
         role="admin",
