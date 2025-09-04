@@ -1,0 +1,25 @@
+# General
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.pyd
+
+# Virtual environments
+.venv/
+.env/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+
+# Pytest
+.pytest_cache/
+
+# Node
+frontend/node_modules/
+
+# IDE
+.vscode/
+.idea/
