@@ -6,6 +6,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import Generator, Optional
+import uuid
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -263,15 +264,17 @@ def seed_admin(db: Session) -> None:
     col_type = _get_column_type("public", "users", "role")
     if col_type and str(col_type).upper() == "USER-DEFINED":
         with engine.begin() as conn:
+            uid = str(uuid.uuid4())
             conn.execute(
                 text(
                     """
-                    INSERT INTO public.users (email, full_name, role, password_hash, is_active)
-                    VALUES (:email, :full_name, CAST(:role AS userrole), :pwd, true)
+                    INSERT INTO public.users (id, email, full_name, role, password_hash, is_active)
+                    VALUES (:id, :email, :full_name, CAST(:role AS userrole), :pwd, true)
                     ON CONFLICT (email) DO NOTHING
                     """
                 ),
                 {
+                    "id": uid,
                     "email": email,
                     "full_name": "Administrator",
                     "role": "admin",
@@ -282,7 +285,6 @@ def seed_admin(db: Session) -> None:
         return
 
     admin = User(
-        id=None,
         email=email,
         full_name="Administrator",
         role="admin",
