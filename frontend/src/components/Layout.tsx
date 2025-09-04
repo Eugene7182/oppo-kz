@@ -16,7 +16,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <Link to="/sku">SKU</Link>
         <Link to="/invites">Инвайты</Link>
         <Link to="/sales">Продажи</Link>
-        <Link to="/price-list">Прайс</Link>
         <Link to="/coeffs">Коэфф.</Link>
         <Link to="/bonus">Бонусы</Link>
         <Link to="/imports">Импорты</Link>
