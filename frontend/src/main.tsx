@@ -1,17 +1,9 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import InviteRegisterPage from './pages/InviteRegister'
 
-import RequireAuth from './components/RequireAuth';
-import RequireRole from './components/RequireRole';
-import Layout from './components/Layout';
-
-import LoginPage from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import InvitesPage from './pages/Invites';
-
+// ...
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  { path: '/register/:code', element: <InviteRegisterPage /> },  // ← добавили
 
   {
     path: '/',
@@ -23,7 +15,6 @@ const router = createBrowserRouter([
       </RequireAuth>
     ),
   },
-
   {
     path: '/invites',
     element: (
@@ -36,10 +27,4 @@ const router = createBrowserRouter([
       </RequireAuth>
     ),
   },
-]);
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <RouterProvider router={router} />
-  </React.StrictMode>
-);
+])
