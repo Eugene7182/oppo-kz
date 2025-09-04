@@ -1,23 +1,14 @@
-import { useEffect, useState } from 'react';
-import { me } from '../services/auth';
+// frontend/src/components/RequireAuth.tsx
+// Простой токен-гард: если нет access_token — уводим на /login.
+import { Navigate, useLocation } from 'react-router-dom'
 
-// Асинхронная проверка ролей через /auth/me
-export default function RequireRole({
-  roles,
-  children,
-}: {
-  roles: string[];
-  children: JSX.Element;
-}) {
-  const [allowed, setAllowed] = useState<null | boolean>(null);
+export default function RequireAuth({ children }: { children: JSX.Element }) {
+  const location = useLocation()
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
 
-  useEffect(() => {
-    me()
-      .then((u) => setAllowed(roles.includes((u.role || '').toLowerCase())))
-      .catch(() => setAllowed(false));
-  }, [roles]);
-
-  if (allowed === null) return <div>Проверяем доступ…</div>;
-  if (!allowed) return <div style={{ color: 'crimson' }}>403 Forbidden: нет прав</div>;
-  return children;
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+  return children
 }
