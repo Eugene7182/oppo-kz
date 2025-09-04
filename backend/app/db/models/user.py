@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 import uuid
+
+from sqlalchemy import Boolean, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Boolean, Index
+
 from app.db.base_class import Base
 
+
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
     __table_args__ = (Index("ix_user_role_email", "role", "email"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """bootstrap userrole enum and add supervisor value safely"""
 
+import sqlalchemy as sa  # noqa: F401
+
 from alembic import op
 
 # Самая первая миграция
 revision = "2025_08_31_add_supervisor_role"
-down_revision = None
+down_revision = "0004_payload_inventory"
 branch_labels = None
 depends_on = None
 

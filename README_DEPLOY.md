@@ -8,6 +8,17 @@ OPPO KZ — Release Build (generated 2025-08-31 20:22:10)
 - Ежемесячный отчёт (CSV) — скелет.
 - «Средний чек» убран из метрик/примеров.
 
+## Render ENV
+- POSTGRES_HOST
+- POSTGRES_PORT
+- POSTGRES_DB
+- POSTGRES_USER
+- POSTGRES_PASSWORD
+- JWT_SECRET
+- ADMIN_EMAIL
+- ADMIN_PASSWORD
+- ADMIN_NAME  # на первый старт
+
 Настройки ENV (Render → Backend):
   ENABLE_GEO_CHECKIN=false
   ENABLE_SELFIE_CHECKIN=false
