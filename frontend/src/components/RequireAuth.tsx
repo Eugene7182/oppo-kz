@@ -1,11 +1,23 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react';
+import { me } from '../services/auth';
 
-function isAuthed() {
-  return !!localStorage.getItem('access_token')
-}
+// Асинхронная проверка ролей через /auth/me
+export default function RequireRole({
+  roles,
+  children,
+}: {
+  roles: string[];
+  children: JSX.Element;
+}) {
+  const [allowed, setAllowed] = useState<null | boolean>(null);
 
-export default function RequireAuth({ children }: { children: JSX.Element }) {
-  const location = useLocation()
-  if (!isAuthed()) return <Navigate to="/login" state={{ from: location }} replace />
-  return children
+  useEffect(() => {
+    me()
+      .then((u) => setAllowed(roles.includes((u.role || '').toLowerCase())))
+      .catch(() => setAllowed(false));
+  }, [roles]);
+
+  if (allowed === null) return <div>Проверяем доступ…</div>;
+  if (!allowed) return <div style={{ color: 'crimson' }}>403 Forbidden: нет прав</div>;
+  return children;
 }
