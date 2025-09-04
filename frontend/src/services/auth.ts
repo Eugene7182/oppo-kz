@@ -1,36 +1,22 @@
-// frontend/src/shared/http.ts
-import axios from 'axios';
+// frontend/src/services/auth.ts
+import { http } from '../shared/http'
 
-const raw = (import.meta.env.VITE_API_URL ?? '').trim();
-if (!/^https?:\/\//i.test(raw)) {
-  throw new Error(`VITE_API_URL must start with http(s)://, got "${raw || '<empty>'}"`);
+type LoginResp = { access_token?: string; token?: string; jwt?: string; token_type?: string }
+export type Me = { email: string; full_name?: string; role: string }
+
+export async function login(username: string, password: string) {
+  const { data } = await http.post<LoginResp>('/api/v1/auth/login', { username, password })
+  const token = data.access_token || data.token || data.jwt
+  if (!token) throw new Error('Не удалось получить токен. Ответ: ' + JSON.stringify(data))
+  localStorage.setItem('access_token', token)
+  return data
 }
 
-export const http = axios.create({
-  baseURL: raw.replace(/\/+$/, ''), // убираем хвостовой "/"
-  timeout: 15000,
-});
+export async function me() {
+  const { data } = await http.get<Me>('/api/v1/auth/me')
+  return data
+}
 
-http.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-http.interceptors.response.use(
-  (r) => r,
-  (err) => {
-    // Покажем понятное сообщение вместо "Network Error"
-    if (!err.response) {
-      err.message = 'Сетевая ошибка или CORS. Проверь CORS_ORIGINS и VITE_API_URL.';
-    }
-    // Если истек токен/невалиден — выходим на /login
-    if (err.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      // Сохраним адрес, чтобы вернуться после логина
-      const back = encodeURIComponent(location.pathname + location.search);
-      location.assign(`/login?back=${back}`);
-    }
-    return Promise.reject(err);
-  }
-);
+export function logout() {
+  localStorage.removeItem('access_token')
+}
