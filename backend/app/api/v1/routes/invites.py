@@ -1,3 +1,4 @@
+# backend/app/api/v1/routes/invites.py
 import secrets
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -14,21 +15,34 @@ router = APIRouter(prefix="/auth/invites", tags=["auth"])
 def _gen_code() -> str:
     return secrets.token_urlsafe(10)
 
-@router.post("", response_model=InviteOut, summary="Создать инвайт (admin)")
-def create_invite(data: InviteCreateIn, db: Session = Depends(get_db), _=Depends(require_roles("admin"))):
+@router.post("", response_model=InviteOut, summary="Создать инвайт (admin/office)")
+def create_invite(
+    data: InviteCreateIn,
+    db: Session = Depends(get_db),
+    _=Depends(require_roles(["admin", "office"]))
+):
     code = _gen_code()
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=data.expires_hours)
-    inv = Invite(code=code, email=str(data.email), role=data.role, full_name=data.full_name, expires_at=expires_at, used=False)
-    db.add(inv); db.commit(); db.refresh(inv)
-    return InviteOut(code=inv.code, email=inv.email, role=inv.role, full_name=inv.full_name, expires_at=inv.expires_at)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=data.expires_hours or 72)
+    inv = Invite(email=data.email, full_name=data.full_name, role=data.role,
+                 code=code, expires_at=expires_at, used=False)
+    db.add(inv)
+    db.commit()
+    db.refresh(inv)
+    return inv
 
-@router.get("/{code}", response_model=InviteCheckOut, summary="Проверить инвайт по коду")
+@router.get("/{code}", response_model=InviteCheckOut, summary="Проверить инвайт")
 def check_invite(code: str, db: Session = Depends(get_db)):
     inv = db.query(Invite).filter(Invite.code == code).first()
     if not inv:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
-    status_str = "used" if inv.used else ("expired" if datetime.now(timezone.utc) >= inv.expires_at else "valid")
-    return InviteCheckOut(code=inv.code, status=status_str, email=inv.email, role=inv.role, full_name=inv.full_name, expires_at=inv.expires_at)
+    now = datetime.now(timezone.utc)
+    return {
+        "email": inv.email,
+        "full_name": inv.full_name,
+        "role": inv.role,
+        "used": inv.used,
+        "expired": now >= inv.expires_at
+    }
 
 @router.post("/register", summary="Зарегистрироваться по инвайту")
 def register_by_invite(data: InviteRegisterIn, db: Session = Depends(get_db)):
@@ -36,10 +50,22 @@ def register_by_invite(data: InviteRegisterIn, db: Session = Depends(get_db)):
     if not inv:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
     now = datetime.now(timezone.utc)
-    if inv.used: raise HTTPException(status_code=400, detail="Invite already used")
-    if now >= inv.expires_at: raise HTTPException(status_code=400, detail="Invite expired")
+    if inv.used:
+        raise HTTPException(status_code=400, detail="Invite already used")
+    if now >= inv.expires_at:
+        raise HTTPException(status_code=400, detail="Invite expired")
     if db.query(User).filter(User.email == inv.email).first():
         raise HTTPException(status_code=409, detail="User already exists")
-    user = User(email=inv.email, full_name=inv.full_name, role=inv.role, password_hash=get_password_hash(data.password), is_active=True)
-    db.add(user); inv.used = True; db.add(inv); db.commit()
+
+    user = User(
+        email=inv.email,
+        full_name=inv.full_name,
+        role=inv.role,
+        password_hash=get_password_hash(data.password),
+        is_active=True
+    )
+    db.add(user)
+    inv.used = True
+    db.add(inv)
+    db.commit()
     return {"status": "registered", "email": user.email, "role": user.role}
