@@ -149,18 +149,32 @@ def _ensure_users_role_varchar() -> None:
 
         data_type, udt_name = row[0], row[1]
         if str(data_type).upper() == "USER-DEFINED":
-            # На некоторых БД висят внешние ключи на users.id с несовместимыми типами,
-            # мы НЕ трогаем id (он уже приведён ранее). Для role просто меняем тип.
-            conn.execute(text("""
+            # При наличии пользовательского enum типа приводим колонку к VARCHAR,
+            # предварительно удалив default (если он указывает на enum).
+            try:
+                conn.execute(text("ALTER TABLE public.users ALTER COLUMN role DROP DEFAULT"))
+            except Exception:
+                # Если default нет или уже строковый — продолжаем.
+                pass
+
+            conn.execute(text(
+                """
                 ALTER TABLE public.users
                 ALTER COLUMN role TYPE VARCHAR(20)
                 USING role::text
-            """))
+                """
+            ))
+
+            # Возвращаем строковый default
+            conn.execute(text("ALTER TABLE public.users ALTER COLUMN role SET DEFAULT 'admin'"))
+
             # Пробуем удалить тип, если больше не используется
             try:
                 conn.execute(text("DROP TYPE IF EXISTS userrole"))
             except Exception:
                 pass
+
+            print("INFO:app.main:users.role converted to VARCHAR(20)")
 
 
 def _ensure_users_id_varchar36() -> None:
