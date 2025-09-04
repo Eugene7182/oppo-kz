@@ -2,6 +2,8 @@
   "name": "oppo-kz",
   "private": true,
   "scripts": {
+    "postinstall": "npm --prefix frontend install --include=dev --no-audit --no-fund",
+    "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build"
   }
 }
