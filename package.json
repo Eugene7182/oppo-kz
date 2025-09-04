@@ -4,6 +4,7 @@
   "scripts": {
     "postinstall": "npm --prefix frontend install --include=dev --no-audit --no-fund",
     "dev": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend test"
   }
 }
