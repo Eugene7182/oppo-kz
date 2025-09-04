@@ -1,0 +1,7 @@
+{
+  "name": "oppo-kz",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build"
+  }
+}
