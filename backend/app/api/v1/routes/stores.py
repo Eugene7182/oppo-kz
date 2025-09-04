@@ -7,18 +7,19 @@ from sqlalchemy.orm import Session
 
 from ....models import Store
 from app.schemas.store import StoreOut, StoreIn
-from ..deps import get_db, require_super
+from ..deps import get_db
+from app.security_rbac import require_roles
 
 router = APIRouter(prefix="/stores", tags=["stores"])
 
 
-@router.get("", response_model=list[StoreOut])
+@router.get("", response_model=list[StoreOut], dependencies=[Depends(require_roles("admin", "office", "supervisor"))])
 def list_stores(db: Session = Depends(get_db)):
     rows = db.scalars(select(Store).order_by(Store.network, Store.city, Store.name)).all()
     return rows
 
 
-@router.post("", response_model=StoreOut, dependencies=[Depends(require_super())])
+@router.post("", response_model=StoreOut, dependencies=[Depends(require_roles("admin", "office"))])
 def create_store(body: StoreIn, db: Session = Depends(get_db)):
     # уникальность: (name, city, network)
     exists = db.scalar(

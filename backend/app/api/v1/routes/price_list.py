@@ -4,13 +4,14 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
+from app.security_rbac import require_roles
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
 # Мы в app/api/v1/routes → к core/models/schemas выходим ЧЕТЫРЬМЯ точками
 from ....models import PriceList, SKU
 from ....schemas import PriceListIn, PriceListOut
-from ..deps import get_db, require_super
+from ..deps import get_db
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ def to_out(row: PriceList) -> PriceListOut:
         valid_to=row.valid_to,
     )
 
-@router.get("/", response_model=list[PriceListOut])
+@router.get("/", response_model=list[PriceListOut], dependencies=[Depends(require_roles("admin", "office"))])
 def list_prices(
     db: Session = Depends(get_db),
     sku_id: int | None = None,
@@ -49,7 +50,7 @@ def list_prices(
     rows = db.scalars(stmt).all()
     return [to_out(r) for r in rows]
 
-@router.post("/", response_model=PriceListOut, dependencies=[Depends(require_super())])
+@router.post("/", response_model=PriceListOut, dependencies=[Depends(require_roles("admin", "office"))])
 def create_price(item: PriceListIn, db: Session = Depends(get_db)):
     # проверим, что SKU существует
     sku = db.get(SKU, item.sku_id)

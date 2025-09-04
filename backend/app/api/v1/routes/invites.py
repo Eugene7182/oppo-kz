@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.authz import require_roles
+from app.security_rbac import require_roles
 from app.core.security import get_db, get_password_hash
 from app.db.models.invite import Invite
 from app.db.models.user import User
@@ -15,11 +15,10 @@ router = APIRouter(prefix="/auth/invites", tags=["auth"])
 def _gen_code() -> str:
     return secrets.token_urlsafe(10)
 
-@router.post("", response_model=InviteOut, summary="Создать инвайт (admin/office)")
+@router.post("", response_model=InviteOut, summary="Создать инвайт", dependencies=[Depends(require_roles("admin"))])
 def create_invite(
     data: InviteCreateIn,
     db: Session = Depends(get_db),
-    _=Depends(require_roles(["admin", "office"]))
 ):
     code = _gen_code()
     expires_at = datetime.now(timezone.utc) + timedelta(hours=data.expires_hours or 72)
@@ -30,7 +29,7 @@ def create_invite(
     db.refresh(inv)
     return inv
 
-@router.get("/{code}", response_model=InviteCheckOut, summary="Проверить инвайт")
+@router.get("/{code}", response_model=InviteCheckOut, summary="Проверить инвайт", dependencies=[Depends(require_roles("admin"))])
 def check_invite(code: str, db: Session = Depends(get_db)):
     inv = db.query(Invite).filter(Invite.code == code).first()
     if not inv:
@@ -44,7 +43,7 @@ def check_invite(code: str, db: Session = Depends(get_db)):
         "expired": now >= inv.expires_at
     }
 
-@router.post("/register", summary="Зарегистрироваться по инвайту")
+@router.post("/register", summary="Зарегистрироваться по инвайту", dependencies=[Depends(require_roles("admin"))])
 def register_by_invite(data: InviteRegisterIn, db: Session = Depends(get_db)):
     inv = db.query(Invite).filter(Invite.code == data.code).first()
     if not inv:
