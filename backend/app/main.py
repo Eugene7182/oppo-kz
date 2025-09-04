@@ -16,7 +16,8 @@ from sqlalchemy.orm import Session
 # Локальные импорты проекта
 from app.api.v1.api import api_router
 from app.core.security import get_password_hash
-from app.db.session import SessionLocal, engine, Base
+from app.db.session import SessionLocal, engine
+from app.db.base_class import Base
 from app.db.models.user import User
 
 # -----------------------------------------------------------------------------
@@ -268,6 +269,11 @@ app.add_middleware(
 
 # Роуты API v1
 app.include_router(api_router, prefix="/api/v1")
+
+# Root endpoint
+@app.get("/")
+def read_root():
+    return {"service": PROJECT_NAME}
 
 # Health
 @app.get("/health", tags=["health"])
