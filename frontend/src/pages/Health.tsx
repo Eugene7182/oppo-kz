@@ -37,3 +37,15 @@ export default function HealthPage() {
     </div>
   )
 }
+
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import HealthPage from '@/pages/Health'
+
+const router = createBrowserRouter([
+  { path: '/', element: <div>Home</div> },
+  { path: '/health', element: <HealthPage /> },
+])
+
+export default function App() {
+  return <RouterProvider router={router} />
+}
