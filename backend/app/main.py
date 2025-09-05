@@ -17,6 +17,8 @@ from app.api.v1.networks import router as networks_router
 from app.api.v1.stores import router as stores_router
 from app.api.v1.sku import router as sku_router
 from app.api.v1.prices import router as prices_router
+from app.api.v1.sales_promoters import router as sales_promoters_router
+from app.api.v1.sales_retail import router as sales_retail_router
 from app.core.logging_config import setup_logging
 from app.core.settings import settings
 from app.feature_flags.deps import FeatureDisabled
@@ -65,6 +67,8 @@ app.include_router(networks_router, prefix="/api/v1")
 app.include_router(stores_router, prefix="/api/v1")
 app.include_router(sku_router, prefix="/api/v1")
 app.include_router(prices_router, prefix="/api/v1")
+app.include_router(sales_promoters_router, prefix="/api/v1")
+app.include_router(sales_retail_router, prefix="/api/v1")
 
 
 @app.exception_handler(FeatureDisabled)

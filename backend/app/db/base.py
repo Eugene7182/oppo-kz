@@ -7,5 +7,17 @@ from app.models.network import Network  # noqa: F401
 from app.models.store import Store  # noqa: F401
 from app.models.sku import Sku  # noqa: F401
 from app.models.price import PriceList  # noqa: F401
+from app.models.sales_promoters import SalesPromoter  # noqa: F401
+from app.models.sales_retail import SalesRetail  # noqa: F401
 
-__all__ = ["Base", "User", "Region", "Network", "Store", "Sku", "PriceList"]
+__all__ = [
+    "Base",
+    "User",
+    "Region",
+    "Network",
+    "Store",
+    "Sku",
+    "PriceList",
+    "SalesPromoter",
+    "SalesRetail",
+]
