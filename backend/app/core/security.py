@@ -101,6 +101,17 @@ def decode_token(token: str) -> dict[str, Any]:
         )
 
 
+def decode_refresh_token(token: str) -> str:
+    """Return user id from refresh token."""
+    payload = decode_token(token)
+    if payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "wrong_token_type", "detail": "Refresh token required"},
+        )
+    return payload.get("sub")
+
+
 # ----- Dependencies -----
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),

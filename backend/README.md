@@ -11,6 +11,26 @@
 - ADMIN_PASSWORD
 - ADMIN_NAME
 
+## Feature flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `ENABLE_BONUSES`   | `false` | демо-роут бонусов |
+| `ENABLE_MESSAGES`  | `false` | модуль сообщений |
+| `ENABLE_IMPORTS`   | `false` | загрузки файлов |
+| `ENABLE_ANALYTICS` | `false` | аналитические отчёты |
+
+### Render
+
+Добавьте флаги в Render Dashboard:
+
+```env
+ENABLE_BONUSES=true
+ENABLE_MESSAGES=false
+ENABLE_IMPORTS=false
+ENABLE_ANALYTICS=false
+```
+
 ## Admin seed
 
 Create superuser from ENV:

@@ -6,12 +6,15 @@ import logging
 import time
 import uuid
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.v1.api import api_router
+from app.api.v1.bonuses import router as bonuses_router
 from app.core.logging_config import setup_logging
 from app.core.settings import settings
+from app.feature_flags.deps import FeatureDisabled
 
 
 setup_logging()
@@ -51,6 +54,16 @@ async def log_requests(request: Request, call_next):
 
 
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(bonuses_router, prefix="/api/v1")
+
+
+@app.exception_handler(FeatureDisabled)
+async def _feature_disabled_handler(_: Request, __: FeatureDisabled):
+    """Return uniform response when a feature is disabled."""
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": "Feature disabled", "code": "feature_disabled"},
+    )
 
 
 __all__ = ["app"]
