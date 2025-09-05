@@ -12,6 +12,9 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.api import api_router
 from app.api.v1.bonuses import router as bonuses_router
+from app.api.v1.regions import router as regions_router
+from app.api.v1.networks import router as networks_router
+from app.api.v1.stores import router as stores_router
 from app.core.logging_config import setup_logging
 from app.core.settings import settings
 from app.feature_flags.deps import FeatureDisabled
@@ -55,6 +58,9 @@ async def log_requests(request: Request, call_next):
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(bonuses_router, prefix="/api/v1")
+app.include_router(regions_router, prefix="/api/v1")
+app.include_router(networks_router, prefix="/api/v1")
+app.include_router(stores_router, prefix="/api/v1")
 
 
 @app.exception_handler(FeatureDisabled)
