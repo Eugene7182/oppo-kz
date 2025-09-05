@@ -1,35 +1,60 @@
+import React from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { me, logout } from '../services/auth'
-import type { Me } from '../services/auth'
+interface NavItem {
+  to: string;
+  label: string;
+  roles?: string[];
+}
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<Me | null>(null)
-  const navigate = useNavigate()
-  useEffect(()=>{ me().then(setUser).catch(()=>setUser(null)) },[])
+// Define navigation items with role restrictions
+const navItems: NavItem[] = [
+  { to: '/', label: 'Health' },
+  { to: '/dicts/networks', label: 'Networks', roles: ['admin', 'office'] },
+  { to: '/dicts/stores', label: 'Stores', roles: ['admin', 'office'] },
+  { to: '/price/upload', label: 'Price Upload', roles: ['admin'] },
+  { to: '/price/sku-list', label: 'SKU List', roles: ['admin'] },
+  { to: '/price/jobs', label: 'Jobs', roles: ['admin'] },
+  { to: '/inventory/balances', label: 'Balances', roles: ['admin', 'office', 'supervisor'] },
+  { to: '/inventory/adjust', label: 'Adjust', roles: ['admin', 'office'] },
+  { to: '/moves', label: 'Moves', roles: ['admin', 'office'] },
+  { to: '/moves/create', label: 'Create Move', roles: ['admin', 'office'] },
+  { to: '/sales/network', label: 'Network Sales', roles: ['admin', 'office'] },
+  { to: '/sales/promoter', label: 'Promoter Sales', roles: ['admin', 'office', 'supervisor', 'promoter'] },
+  { to: '/sales/reconcile', label: 'Reconcile', roles: ['admin'] },
+  { to: '/logistics/shipments', label: 'Shipments', roles: ['admin', 'office'] },
+  { to: '/logistics/in-transit', label: 'In Transit', roles: ['admin', 'office'] },
+  { to: '/messages', label: 'Messages', roles: ['admin', 'office'] },
+  { to: '/messages/create', label: 'Create Message', roles: ['admin', 'office'] },
+  { to: '/flags', label: 'Flags', roles: ['admin'] },
+];
+
+// Layout with top navigation and outlet
+export default function Layout() {
+  const { user, logout } = useAuth();
+
   return (
-    <div>
-      <header style={{ padding:'12px 16px', borderBottom:'1px solid #eee', display:'flex', gap:16, flexWrap:'wrap' }}>
-        <Link to="/">Dashboard</Link>
-        <Link to="/stores">Магазины</Link>
-        <Link to="/sku">SKU</Link>
-        <Link to="/invites">Инвайты</Link>
-        <Link to="/sales">Продажи</Link>
-        <Link to="/coeffs">Коэфф.</Link>
-        <Link to="/bonus">Бонусы</Link>
-        <Link to="/imports">Импорты</Link>
-        <Link to="/moves">Перемещения</Link>
-        <Link to="/inventory">Остатки</Link>
-        <Link to="/reconciliation">Сверка</Link>
-        <div style={{ marginLeft:'auto' }}>
-          {user ? (<>
-            <span style={{ marginRight:12 }}>{user.full_name || user.email} ({user.role})</span>
-            <button onClick={()=>{ logout(); navigate('/login', { replace:true }) }}>Выйти</button>
-          </>) : <Link to="/login">Войти</Link>}
-        </div>
-      </header>
-      <main style={{ padding:24 }}>{children}</main>
+    <div className="min-h-screen flex flex-col">
+      <nav className="bg-blue-600 text-white px-4 py-2 flex gap-4 items-center">
+        <span className="font-bold">Demo</span>
+        {navItems
+          .filter((i) => !i.roles || (user && i.roles.includes(user.role)))
+          .map((i) => (
+            <NavLink key={i.to} to={i.to} className="hover:underline">
+              {i.label}
+            </NavLink>
+          ))}
+        <div className="flex-1" />
+        {user && (
+          <button onClick={logout} className="underline">
+            Logout
+          </button>
+        )}
+      </nav>
+      <main className="p-4 flex-1">
+        <Outlet />
+      </main>
     </div>
-  )
+  );
 }
