@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     debug: bool = False
     version: str = "0.1.0"
     git_commit: str | None = None
+    algorithm: str = "HS256"
+    access_token_expires_min: int = 30
+    refresh_token_expires_days: int = 7
+    admin_email: str | None = None
+    admin_password: str | None = None
 
     @field_validator("database_url", mode="before")
     @classmethod
@@ -57,4 +62,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-

@@ -1,8 +1,9 @@
 # backend/alembic/env.py
 import os
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
+
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 config = context.config
 if config.config_file_name is not None:
@@ -19,16 +20,17 @@ if db_url.startswith("postgresql://"):
 
 config.set_main_option("sqlalchemy.url", db_url)
 
-from app.db.base_class import Base  # noqa
-from app.db.models.user import User  # noqa
+from app.db.base import Base  # noqa
 
 target_metadata = Base.metadata
+
 
 def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
     context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online():
     connectable = engine_from_config(
@@ -40,6 +42,7 @@ def run_migrations_online():
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
