@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class FeatureFlags(BaseSettings):
     # Гео/селфи выключены по умолчанию (можно включить ENV-ами)
     ENABLE_GEO_CHECKIN: bool = False
