@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import http from '../lib/http';
-import Spinner from '../components/Spinner';
-import { useToast } from '../lib/toast';
+import http from '../shared/api/http';
+import Spinner from '../widgets/Spinner';
+import { useToast } from '../shared/ui/toast';
 
 interface HealthInfo {
   health: string | null;

@@ -4,8 +4,8 @@ set -euo pipefail
 # DRY_RUN=true by default; set CONFIRM=YES to actually delete or DRY_RUN=false.
 #
 # Usage:
-#   BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./scripts/wipe_demo.sh
-#   CONFIRM=YES ./scripts/wipe_demo.sh   # actually delete
+#   BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./infra/scripts/wipe_demo.sh
+#   CONFIRM=YES ./infra/scripts/wipe_demo.sh   # actually delete
 #
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 ADMIN_USER="${ADMIN_USER:-admin@oppo.kz}"

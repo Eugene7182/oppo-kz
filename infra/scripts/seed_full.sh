@@ -4,7 +4,7 @@ set -euo pipefail
 # Requires: bash, curl, python3
 #
 # Usage:
-#   BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./scripts/seed_full.sh
+#   BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./infra/scripts/seed_full.sh
 
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 ADMIN_USER="${ADMIN_USER:-admin@oppo.kz}"

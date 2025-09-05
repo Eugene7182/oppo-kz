@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import http, { setAuthTokens, clearAuthTokens } from '../lib/http';
-import { toast } from '../lib/toast';
+import http, { setAuthTokens, clearAuthTokens } from '../api/http';
+import { toast } from '../ui/toast';
 
 export type Role = 'admin' | 'office' | 'supervisor' | 'promoter';
 

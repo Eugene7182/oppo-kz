@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import type { Role } from '../context/AuthContext';
+import { useAuth } from '../shared/context/AuthContext';
+import type { Role } from '../shared/context/AuthContext';
 import EmptyState from './EmptyState';
 
 interface GuardProps {

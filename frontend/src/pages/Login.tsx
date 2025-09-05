@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import FormField from '../components/FormField';
-import Spinner from '../components/Spinner';
-import { useToast } from '../lib/toast';
+import { useAuth } from '../shared/context/AuthContext';
+import FormField from '../widgets/FormField';
+import Spinner from '../widgets/Spinner';
+import { useToast } from '../shared/ui/toast';
 
 // Login page
 export default function Login() {

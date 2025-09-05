@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { toast } from './toast';
+import { toast } from '../ui/toast';
 
 // Базовый URL из окружения
 const API_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:8000';
