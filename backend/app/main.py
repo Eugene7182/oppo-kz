@@ -29,6 +29,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    """Log request and response data in JSON format."""
     start = time.perf_counter()
     trace_id = str(uuid.uuid4())
     request.state.trace_id = trace_id
@@ -38,14 +39,12 @@ async def log_requests(request: Request, call_next):
     logging.getLogger("app.request").info(
         "request",
         extra={
-            "extra": {
-                "method": request.method,
-                "path": request.url.path,
-                "status": response.status_code,
-                "duration_ms": round(duration_ms, 2),
-                "user_id": user_id,
-                "trace_id": trace_id,
-            }
+            "method": request.method,
+            "path": request.url.path,
+            "status": response.status_code,
+            "duration_ms": round(duration_ms, 2),
+            "user_id": user_id,
+            "trace_id": trace_id,
         },
     )
     return response
