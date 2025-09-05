@@ -54,7 +54,7 @@ def _create_token(
         "iat": int(now.timestamp()),
         "exp": int((now + expires_delta).timestamp()),
     }
-    secret = settings.SECRET_KEY
+    secret = settings.secret_key
     algorithm = getattr(settings, "ALGORITHM", "HS256")
     return jwt.encode(payload, secret, algorithm=algorithm)
 
@@ -82,7 +82,7 @@ def decode_token(token: str) -> dict[str, Any]:
     try:
         data = jwt.decode(
             token,
-            settings.SECRET_KEY,
+            settings.secret_key,
             algorithms=[getattr(settings, "ALGORITHM", "HS256")],
             options={"require": ["sub", "type", "exp"]},
         )

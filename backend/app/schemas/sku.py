@@ -1,15 +1,35 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
+"""SKU schemas."""
 
-class SKUOut(BaseModel):
-    # + protected_namespaces=() — гасим конфликт с полем model_name
-    model_config = ConfigDict(from_attributes=True, extra="allow", protected_namespaces=())
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict
+
+
+class SkuBase(BaseModel):
+    brand: str
+    model: str
+    attrs: dict | None = None
+    active: bool | None = True
+
+
+class SkuCreate(SkuBase):
+    pass
+
+
+class SkuUpdate(BaseModel):
+    brand: str | None = None
+    model: str | None = None
+    attrs: dict | None = None
+    active: bool | None = None
+
+
+class SkuRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
-    sku: Optional[str] = None
-    code: Optional[str] = None
-    name: Optional[str] = None
-    brand: Optional[str] = None
-    model_name: Optional[str] = None
-    category: Optional[str] = None
-    price: Optional[float] = None
-    is_active: Optional[bool] = None
+    brand: str
+    model: str
+    attrs: dict | None = None
+    active: bool
+
+
+__all__ = ["SkuCreate", "SkuUpdate", "SkuRead"]

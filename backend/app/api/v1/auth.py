@@ -32,8 +32,8 @@ def login(data: LoginRequest, db: Session = Depends(get_db)) -> TokenPair:  # no
             headers={"WWW-Authenticate": "Bearer"},
         )
     return TokenPair(
-        access_token=create_access_token(user),
-        refresh_token=create_refresh_token(user),
+        access_token=create_access_token(user.id),
+        refresh_token=create_refresh_token(user.id),
     )
 
 
@@ -53,8 +53,8 @@ def refresh(data: RefreshRequest, db: Session = Depends(get_db)) -> TokenPair:  
             headers={"WWW-Authenticate": "Bearer"},
         )
     return TokenPair(
-        access_token=create_access_token(user),
-        refresh_token=create_refresh_token(user),
+        access_token=create_access_token(user.id),
+        refresh_token=create_refresh_token(user.id),
     )
 
 
