@@ -15,6 +15,8 @@ from app.api.v1.bonuses import router as bonuses_router
 from app.api.v1.regions import router as regions_router
 from app.api.v1.networks import router as networks_router
 from app.api.v1.stores import router as stores_router
+from app.api.v1.sku import router as sku_router
+from app.api.v1.prices import router as prices_router
 from app.core.logging_config import setup_logging
 from app.core.settings import settings
 from app.feature_flags.deps import FeatureDisabled
@@ -61,6 +63,8 @@ app.include_router(bonuses_router, prefix="/api/v1")
 app.include_router(regions_router, prefix="/api/v1")
 app.include_router(networks_router, prefix="/api/v1")
 app.include_router(stores_router, prefix="/api/v1")
+app.include_router(sku_router, prefix="/api/v1")
+app.include_router(prices_router, prefix="/api/v1")
 
 
 @app.exception_handler(FeatureDisabled)
