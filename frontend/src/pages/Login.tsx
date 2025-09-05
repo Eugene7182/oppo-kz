@@ -1,49 +1,64 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { login, me } from '../services/auth'
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import FormField from '../components/FormField';
+import Spinner from '../components/Spinner';
+import { useToast } from '../lib/toast';
 
-export default function LoginPage() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
-  const location = useLocation() as any
+// Login page
+export default function Login() {
+  const { login } = useAuth();
+  const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  const from = (location.state as any)?.from?.pathname || '/';
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      await login(username, password)    // положит access_token в localStorage
-      await me().catch(() => {})
-      const to = location.state?.from?.pathname || '/'
-      navigate(to, { replace: true })
-    } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || 'Ошибка входа'
-      setError(msg)
+      await login(username, password);
+      navigate(from, { replace: true });
+    } catch (e: any) {
+      toast(e.message || 'Ошибка входа', 'error');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div style={{ maxWidth: 480, margin: '48px auto', padding: 16 }}>
-      <h1>Вход</h1>
-      <p>Введите логин и пароль. Логин = <i>username</i> из инвайта (можно e-mail).</p>
-      <form onSubmit={onSubmit}>
-        <label>Логин</label>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} style={{ width: '100%', padding: 8, marginBottom: 12 }} />
-        <label>Пароль</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: 8, marginBottom: 12 }} />
-        {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: 10 }}>
-          {loading ? 'Входим…' : 'Войти'}
+    <div className="flex items-center justify-center h-screen">
+      <form onSubmit={submit} className="bg-white p-6 rounded shadow w-80">
+        <h1 className="text-xl mb-4">Вход</h1>
+        <FormField label="Логин">
+          <input
+            className="w-full border px-2 py-1"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </FormField>
+        <FormField label="Пароль">
+          <input
+            type="password"
+            className="w-full border px-2 py-1"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </FormField>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? <Spinner /> : 'Войти'}
         </button>
       </form>
-      <div style={{ marginTop: 12 }}>
-        <a href="/">← На главную</a>
-      </div>
     </div>
-  )
+  );
 }

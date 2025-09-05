@@ -1,11 +1,20 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import './styles/index.css';
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './lib/toast';
 
-import App from './App'
-import ErrorBoundary from './components/ErrorBoundary'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
+// Bootstrap the application
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <ErrorBoundary><App /></ErrorBoundary>
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>
-)
+);
