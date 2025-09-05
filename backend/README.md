@@ -2,15 +2,22 @@
 
 ## Render ENV
 
-- POSTGRES_HOST
-- POSTGRES_PORT
-- POSTGRES_DB
-- POSTGRES_USER
-- POSTGRES_PASSWORD
-- JWT_SECRET
+- DATABASE_URL
+- SECRET_KEY
+- ALGORITHM
+- ACCESS_TOKEN_EXPIRES_MIN
+- REFRESH_TOKEN_EXPIRES_DAYS
 - ADMIN_EMAIL
 - ADMIN_PASSWORD
 - ADMIN_NAME
+
+## Admin seed
+
+Create superuser from ENV:
+
+```bash
+python -m app.services.user_service --ensure-admin
+```
 
 ## Smoke
 
