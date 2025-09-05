@@ -14,8 +14,8 @@ const navItems: NavItem[] = [
   { to: '/dicts/networks', label: 'Networks', roles: ['admin', 'office'] },
   { to: '/dicts/stores', label: 'Stores', roles: ['admin', 'office'] },
   { to: '/price/upload', label: 'Price Upload', roles: ['admin'] },
-  { to: '/price/sku-list', label: 'SKU List', roles: ['admin'] },
-  { to: '/price/jobs', label: 'Jobs', roles: ['admin'] },
+  { to: '/price/sku', label: 'SKU List', roles: ['admin'] },
+  { to: '/imports/jobs', label: 'Jobs', roles: ['admin'] },
   { to: '/inventory/balances', label: 'Balances', roles: ['admin', 'office', 'supervisor'] },
   { to: '/inventory/adjust', label: 'Adjust', roles: ['admin', 'office'] },
   { to: '/moves', label: 'Moves', roles: ['admin', 'office'] },
@@ -32,21 +32,21 @@ const navItems: NavItem[] = [
 
 // Layout with top navigation and outlet
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { me, logout } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="bg-blue-600 text-white px-4 py-2 flex gap-4 items-center">
         <span className="font-bold">Demo</span>
         {navItems
-          .filter((i) => !i.roles || (user && i.roles.includes(user.role)))
+          .filter((i) => !i.roles || (me && i.roles.includes(me.role)))
           .map((i) => (
             <NavLink key={i.to} to={i.to} className="hover:underline">
               {i.label}
             </NavLink>
           ))}
         <div className="flex-1" />
-        {user && (
+        {me && (
           <button onClick={logout} className="underline">
             Logout
           </button>

@@ -4,9 +4,14 @@ import { createPortal } from 'react-dom';
 export type ToastType = 'success' | 'error';
 interface Toast { id: number; message: string; type: ToastType; }
 
-const ToastContext = createContext<(msg: string, type?: ToastType) => void>(() => {
+// Храним ссылку на функцию показа тостов для вызова вне реакта (например, в интерцепторах)
+let externalToast: (msg: string, type?: ToastType) => void = () => {
   console.warn('Toast context not ready');
-});
+};
+
+const ToastContext = createContext<(msg: string, type?: ToastType) => void>(
+  (msg, type) => externalToast(msg, type),
+);
 
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -17,6 +22,9 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     // Auto-remove after 3 seconds
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   };
+
+  // делаем функцию доступной вне реакта
+  externalToast = addToast;
 
   return (
     <ToastContext.Provider value={addToast}>
@@ -41,3 +49,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useToast = () => useContext(ToastContext);
+
+// Упрощённый хелпер для вызова тостов без хука
+export const toast = (msg: string, type: ToastType = 'success') =>
+  externalToast(msg, type);
