@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { Role } from '../context/AuthContext';
+import EmptyState from './EmptyState';
 
 interface GuardProps {
   children: JSX.Element;
@@ -10,14 +11,16 @@ interface GuardProps {
 
 // Route guard that checks authentication and roles
 export default function Guard({ children, roles }: GuardProps) {
-  const { user } = useAuth();
+  const { me } = useAuth();
   const location = useLocation();
 
-  if (!user) {
+  // Нет токена — отправляем пользователя на страницу логина
+  if (!me) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+  // Есть пользователь, но роль не подходит — показываем дружелюбное сообщение
+  if (roles && !roles.includes(me.role)) {
+    return <EmptyState title="403" description="Недостаточно прав" />;
   }
   return children;
 }
