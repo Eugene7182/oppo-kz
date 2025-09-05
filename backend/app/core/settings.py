@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     refresh_token_expires_days: int = 7
     admin_email: str | None = None
     admin_password: str | None = None
+    enable_bonuses: bool = False
+    enable_messages: bool = False
+    enable_imports: bool = False
+    enable_analytics: bool = False
 
     @field_validator("database_url", mode="before")
     @classmethod
