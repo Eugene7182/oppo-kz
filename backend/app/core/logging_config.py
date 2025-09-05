@@ -19,6 +19,12 @@ class JsonFormatter(logging.Formatter):
             "time": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
             "level": record.levelname.lower(),
             "message": record.getMessage(),
+            "method": getattr(record, "method", None),
+            "path": getattr(record, "path", None),
+            "status": getattr(record, "status", None),
+            "duration_ms": getattr(record, "duration_ms", None),
+            "user_id": getattr(record, "user_id", None),
+            "trace_id": getattr(record, "trace_id", None),
         }
         extra = getattr(record, "extra", None)
         if isinstance(extra, dict):
