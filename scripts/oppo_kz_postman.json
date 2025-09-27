@@ -1,0 +1,259 @@
+{
+  "info": {
+    "name": "OPPO KZ API",
+    "_postman_id": "b2c1ef6b-1111-2222-3333-20250901103623",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/api/v1/health"
+      }
+    },
+    {
+      "name": "Version",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/api/v1/version"
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "username",
+              "value": "{{ADMIN_USER}}"
+            },
+            {
+              "key": "password",
+              "value": "{{ADMIN_PASS}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create Invite",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/auth/invites",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"pavlov\",\"role\":\"promoter\",\"full_name\":\"Иван Павлов\",\"expires_hours\":72}"
+        }
+      }
+    },
+    {
+      "name": "Check Invite",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/api/v1/auth/invites/{{CODE}}"
+      }
+    },
+    {
+      "name": "Register by Invite (alias)",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/auth/invites/register",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"code\":\"{{CODE}}\",\"password\":\"StrongPass123\"}"
+        }
+      }
+    },
+    {
+      "name": "Refresh",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/auth/refresh",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Store Coeff — Create",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/store-coefficients",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"store_id\":1,\"code\":\"A\",\"value\":1.15}"
+        }
+      }
+    },
+    {
+      "name": "Imports (CSV) skus",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/imports/skus",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Exports template (pricelist)",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/api/v1/exports/templates/pricelist.csv"
+      }
+    },
+    {
+      "name": "Bonus calc preview",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/bonus/calc-preview",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"period_from\":\"2025-09-01\",\"period_to\":\"2025-09-30\",\"sales\":[{\"promoter\":\"pavlov\",\"sku_code\":\"OPPO-A1K\",\"qty\":3,\"unit_bonus\":150}]}"
+        }
+      }
+    },
+    {
+      "name": "Bonus calc commit",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/bonus/calc-commit",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"period_from\":\"2025-09-01\",\"period_to\":\"2025-09-30\",\"by_promoter\":[{\"promoter\":\"pavlov\",\"amount\":450}]}"
+        }
+      }
+    },
+    {
+      "name": "Transfers suggest",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/api/v1/transfers/suggest?store=A01",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Campaigns list",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/api/v1/campaigns",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Campaigns create",
+      "request": {
+        "method": "POST",
+        "url": "{{BASE_URL}}/api/v1/campaigns",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{TOKEN}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Autumn Promo\",\"start\":\"2025-09-10\",\"end\":\"2025-10-10\",\"stores\":[\"A01\"],\"skus\":[\"OPPO-A1K\"],\"mechanics\":{\"type\":\"discount\",\"value\":10}}"
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "ADMIN_USER",
+      "value": "admin@oppo.kz"
+    },
+    {
+      "key": "ADMIN_PASS",
+      "value": "StrongPass123"
+    },
+    {
+      "key": "TOKEN",
+      "value": ""
+    },
+    {
+      "key": "CODE",
+      "value": ""
+    }
+  ]
+}

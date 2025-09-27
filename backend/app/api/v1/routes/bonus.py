@@ -7,8 +7,7 @@ from sqlalchemy import and_, select
 
 from ....db import SessionLocal
 from ....models import BonusGrid
-from ....core.security import get_current_user
-from app.security_rbac import require_roles
+from ....core.security import get_current_user, require_role
 
 router = APIRouter(prefix="/bonus", tags=["bonus"])
 
@@ -38,12 +37,13 @@ class BonusCreate(BaseModel):
     valid_from: date
     valid_to: date | None = None
 
-@router.get("", response_model=list[BonusOut], dependencies=[Depends(require_roles("admin", "office"))])
+@router.get("", response_model=list[BonusOut])
 def list_bonus(
     db: Session = Depends(get_db),
     date_on: date | None = Query(None, description="Вернуть сетки, действующие на дату"),
     sku_id: int | None = None,
     network: str | None = None,
+    _: any = Depends(get_current_user),  # любой залогиненный
 ):
     stmt = select(BonusGrid)
     if date_on:
@@ -59,8 +59,8 @@ def list_bonus(
         stmt = stmt.where(BonusGrid.network == network)
     return db.execute(stmt).scalars().all()
 
-@router.post("", response_model=BonusOut, dependencies=[Depends(require_roles("admin", "office"))])
-def create_bonus(body: BonusCreate, db: Session = Depends(get_db)):
+@router.post("", response_model=BonusOut)
+def create_bonus(body: BonusCreate, db: Session = Depends(get_db), _: any = Depends(require_role("super"))):
     b = BonusGrid(**body.model_dump())
     db.add(b)
     db.commit()

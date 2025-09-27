@@ -1,170 +1,66 @@
 # backend/app/core/security.py
 from __future__ import annotations
-
-"""
-Security utilities: hashing, JWT tokens, and role-based access.
-- Пароли: bcrypt (passlib)
-- JWT: access/refresh, HS256
-- Зависимости: current_user, RBAC
-"""
-
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, List, Optional
-
+from typing import Generator
 import jwt
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
+from fastapi import Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 
-from app.core.settings import settings
-from app.db.session import get_db
-from app.models.user import User, UserRole
+from app.core.config import JWT_SECRET, JWT_ALGO, ACCESS_TOKEN_EXPIRE_MIN
+from app.db.session import SessionLocal
+from app.db.models.user import User
 
-# ----- Password hashing -----
-_pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
-    """Хеш пароля для хранения в БД."""
-    return _pwd_ctx.hash(password)
+    """Хэширует пароль."""
+    return pwd_context.hash(password)
 
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Проверка совпадения пароля с хешем."""
-    return _pwd_ctx.verify(plain_password, hashed_password)
-
-
-# ----- JWT helpers -----
-_bearer = HTTPBearer(auto_error=False)  # не падать, если нет заголовка
-
-
-def _create_token(
-    *, subject: str, token_type: str, expires_delta: timedelta
-) -> str:
-    """
-    Сформировать JWT.
-    subject: id пользователя (строка UUID).
-    token_type: 'access' | 'refresh'
-    """
-    now = datetime.now(timezone.utc)
-    payload = {
-        "sub": subject,
-        "type": token_type,
-        "iat": int(now.timestamp()),
-        "exp": int((now + expires_delta).timestamp()),
-    }
-    secret = settings.secret_key
-    algorithm = getattr(settings, "ALGORITHM", "HS256")
-    return jwt.encode(payload, secret, algorithm=algorithm)
-
-
-def create_access_token(user_id: str) -> str:
-    minutes = int(getattr(settings, "ACCESS_TOKEN_EXPIRES_MIN", 30))
-    return _create_token(
-        subject=user_id,
-        token_type="access",
-        expires_delta=timedelta(minutes=minutes),
-    )
-
-
-def create_refresh_token(user_id: str) -> str:
-    days = int(getattr(settings, "REFRESH_TOKEN_EXPIRES_DAYS", 7))
-    return _create_token(
-        subject=user_id,
-        token_type="refresh",
-        expires_delta=timedelta(days=days),
-    )
-
-
-def decode_token(token: str) -> dict[str, Any]:
-    """Декод без валидации ролей; бросает HTTP 401 на любой проблеме."""
+def verify_password(plain: str, hashed: str) -> bool:
+    """Проверяет пароль."""
     try:
-        data = jwt.decode(
-            token,
-            settings.secret_key,
-            algorithms=[getattr(settings, "ALGORITHM", "HS256")],
-            options={"require": ["sub", "type", "exp"]},
-        )
-        return data
+        return pwd_context.verify(plain, hashed)
+    except Exception:
+        return False
+
+def create_access_token(subject: str) -> str:
+    """Создаёт JWT access token c exp и iat."""
+    now = datetime.now(timezone.utc)
+    exp = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MIN)
+    payload = {"sub": subject, "iat": int(now.timestamp()), "exp": int(exp.timestamp())}
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
+
+def decode_token(token: str) -> dict:
+    """Декодирует и валидирует JWT."""
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGO])
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "token_expired", "detail": "Token expired"},
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "token_invalid", "detail": "Invalid token"},
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
+def get_db() -> Generator[Session, None, None]:
+    """Зависимость FastAPI: даёт сессию БД и корректно закрывает её."""
+    db: Session = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-def decode_refresh_token(token: str) -> str:
-    """Return user id from refresh token."""
-    payload = decode_token(token)
-    if payload.get("type") != "refresh":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "wrong_token_type", "detail": "Refresh token required"},
-        )
-    return payload.get("sub")
-
-
-# ----- Dependencies -----
-async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
-    db: Session = Depends(get_db),
+def get_current_user(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db)
 ) -> User:
-    """
-    Достаёт пользователя из access-токена.
-    Требует Authorization: Bearer <access>.
-    """
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "credentials_missing", "detail": "Missing Bearer token"},
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = credentials.credentials
+    """Получение текущего пользователя по Bearer токену."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
+    token = authorization.split(" ", 1)[1]
     payload = decode_token(token)
-    if payload.get("type") != "access":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "wrong_token_type", "detail": "Access token required"},
-        )
-
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "no_subject", "detail": "Token has no subject"},
-        )
-
-    # Загрузка пользователя
-    user: Optional[User] = db.get(User, user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "user_not_found", "detail": "User not found"},
-        )
+    sub = payload.get("sub")
+    if not sub:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+    user = db.query(User).filter(User.email == sub).first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive or not found")
     return user
-
-
-def rbac_required(allowed_roles: List[UserRole]) -> Callable[[User], User]:
-    """
-    Dependency-генератор: ограничение доступа по ролям.
-    Пример:
-        @router.get("/admin-only", dependencies=[Depends(rbac_required([UserRole.admin]))])
-    """
-    def _dep(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={"code": "forbidden", "detail": "Insufficient role"},
-            )
-        return current_user
-
-    return _dep

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ....db import get_db
 from ....models import BonusGrid
 from app.schemas.bonus_grids import BonusGridIn, BonusGridOut
-from app.security_rbac import require_roles
+from ..deps import require_super  # только супер может изменять
 
 router = APIRouter(prefix="/api/v1/bonus", tags=["Bonus Grids"])
 
@@ -17,7 +17,7 @@ def _active_filter(on: Optional[date]):
         return True
     return and_(BonusGrid.valid_from <= on, (BonusGrid.valid_to.is_(None)) | (BonusGrid.valid_to >= on))
 
-@router.get("/", response_model=List[BonusGridOut], dependencies=[Depends(require_roles("admin", "office"))])
+@router.get("/", response_model=List[BonusGridOut])
 def list_bonus_grids(
     db: Session = Depends(get_db),
     network: Optional[str] = Query(default=None),
@@ -32,10 +32,11 @@ def list_bonus_grids(
     res = db.execute(stmt.order_by(BonusGrid.valid_from.desc(), BonusGrid.id.desc())).scalars().all()
     return res
 
-@router.post("/", response_model=BonusGridOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles("admin", "office"))])
+@router.post("/", response_model=BonusGridOut, status_code=status.HTTP_201_CREATED)
 def create_bonus_grid(
     body: BonusGridIn,
     db: Session = Depends(get_db),
+    _super=Depends(require_super),
 ):
     if not body.sku_id and not body.network:
         raise HTTPException(status_code=400, detail="Укажите sku_id или network")
@@ -52,11 +53,12 @@ def create_bonus_grid(
     db.refresh(obj)
     return obj
 
-@router.put("/{grid_id}", response_model=BonusGridOut, dependencies=[Depends(require_roles("admin", "office"))])
+@router.put("/{grid_id}", response_model=BonusGridOut)
 def update_bonus_grid(
     grid_id: int,
     body: BonusGridIn,
     db: Session = Depends(get_db),
+    _super=Depends(require_super),
 ):
     obj = db.get(BonusGrid, grid_id)
     if not obj:
@@ -76,10 +78,11 @@ def update_bonus_grid(
     db.refresh(obj)
     return obj
 
-@router.delete("/{grid_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_roles("admin", "office"))])
+@router.delete("/{grid_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_bonus_grid(
     grid_id: int,
     db: Session = Depends(get_db),
+    _super=Depends(require_super),
 ):
     obj = db.get(BonusGrid, grid_id)
     if not obj:

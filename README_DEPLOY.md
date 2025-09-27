@@ -8,17 +8,6 @@ OPPO KZ — Release Build (generated 2025-08-31 20:22:10)
 - Ежемесячный отчёт (CSV) — скелет.
 - «Средний чек» убран из метрик/примеров.
 
-## Render ENV
-- POSTGRES_HOST
-- POSTGRES_PORT
-- POSTGRES_DB
-- POSTGRES_USER
-- POSTGRES_PASSWORD
-- JWT_SECRET
-- ADMIN_EMAIL
-- ADMIN_PASSWORD
-- ADMIN_NAME  # на первый старт
-
 Настройки ENV (Render → Backend):
   ENABLE_GEO_CHECKIN=false
   ENABLE_SELFIE_CHECKIN=false
@@ -45,50 +34,50 @@ Frontend:
 
 
 ## Скрипты /scripts
-- `infra/scripts/smoke.sh` — E2E smoke-тест API (curl + python). Пример:
+- `scripts/smoke.sh` — E2E smoke-тест API (curl + python). Пример:
   ```bash
-  BASE_URL=https://oppo-api.onrender.com   ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123   ./infra/scripts/smoke.sh
+  BASE_URL=https://oppo-api.onrender.com   ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123   ./scripts/smoke.sh
   ```
-- `infra/scripts/migrate.sh` — Alembic upgrade head.
-- `infra/scripts/curl_tokens.sh` — получить токен админа (raw JSON).
-- `infra/scripts/oppo_kz_postman.json` — коллекция Postman.
+- `scripts/migrate.sh` — Alembic upgrade head.
+- `scripts/curl_tokens.sh` — получить токен админа (raw JSON).
+- `scripts/oppo_kz_postman.json` — коллекция Postman.
 - `Makefile` — удобные цели: `make dev-up|dev-down|migrate|smoke`.
 
 
 ## Дополнительные скрипты
-- `infra/scripts/seed_demo.sh` — засеять демо-данные через API (инвайт/регистрация промоутера, store-coeff если есть store, проверка feature-flags).
+- `scripts/seed_demo.sh` — засеять демо-данные через API (инвайт/регистрация промоутера, store-coeff если есть store, проверка feature-flags).
   ```bash
-  BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./infra/scripts/seed_demo.sh
+  BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./scripts/seed_demo.sh
   ```
-- `infra/scripts/e2e_ai_stock_reports.sh` — пройтись по AI/Stock/Reports эндпойнтам и вывести статусы.
+- `scripts/e2e_ai_stock_reports.sh` — пройтись по AI/Stock/Reports эндпойнтам и вывести статусы.
   ```bash
-  BASE_URL=https://<backend-domain> ADMIN_USER=<user> ADMIN_PASS=<pass> ./infra/scripts/e2e_ai_stock_reports.sh
+  BASE_URL=https://<backend-domain> ADMIN_USER=<user> ADMIN_PASS=<pass> ./scripts/e2e_ai_stock_reports.sh
   ```
 
 
 ## Полный сид (демо-данные под AI/Stock/Reports/Sales)
-- `infra/scripts/seed_full.sh` — создаёт Stores, SKUs, PriceList, начальные остатки, продажи, отгрузки/в пути, бонусную сетку и коэффициенты.
+- `scripts/seed_full.sh` — создаёт Stores, SKUs, PriceList, начальные остатки, продажи, отгрузки/в пути, бонусную сетку и коэффициенты.
   Скрипт **робастный**: для каждого домена пробует несколько вариантов эндпойнтов и пропускает те, которых нет.
   ```bash
-  BASE_URL=http://localhost:8000   ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123   ./infra/scripts/seed_full.sh
+  BASE_URL=http://localhost:8000   ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123   ./scripts/seed_full.sh
   ```
-  После этого `infra/scripts/e2e_ai_stock_reports.sh` и фронтенд отчёты будут иметь данные.
+  После этого `scripts/e2e_ai_stock_reports.sh` и фронтенд отчёты будут иметь данные.
 
 
 ## Очистка и нагрузочное наполнение
-- `infra/scripts/wipe_demo.sh` — удаляет только демо-данные, созданные сидерами (по умолчанию DRY-RUN).  
+- `scripts/wipe_demo.sh` — удаляет только демо-данные, созданные сидерами (по умолчанию DRY-RUN).  
   Запуск:
   ```bash
   # посмотреть, что будет удалено (по умолчанию dry-run)
-  BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./infra/scripts/wipe_demo.sh
+  BASE_URL=http://localhost:8000 ADMIN_USER=admin@oppo.kz ADMIN_PASS=StrongPass123 ./scripts/wipe_demo.sh
   # реально удалить
-  CONFIRM=YES DRY_RUN=false BASE_URL=... ADMIN_USER=... ADMIN_PASS=... ./infra/scripts/wipe_demo.sh
+  CONFIRM=YES DRY_RUN=false BASE_URL=... ADMIN_USER=... ADMIN_PASS=... ./scripts/wipe_demo.sh
   ```
 
-- `infra/scripts/seed_sales_bulk.sh` — массовая генерация продаж для графиков/нагрузки.  
+- `scripts/seed_sales_bulk.sh` — массовая генерация продаж для графиков/нагрузки.  
   Параметры: `DAYS`, `PER_DAY`, `STORES`, `SKUS`, `PROMOTER`. Пытается `/api/v1/sales/bulk`, иначе постит поштучно.
   ```bash
-  DAYS=14 PER_DAY=200 STORES=A01,A02 SKUS=OPPO-A1K,OPPO-RENO10 ./infra/scripts/seed_sales_bulk.sh
+  DAYS=14 PER_DAY=200 STORES=A01,A02 SKUS=OPPO-A1K,OPPO-RENO10 ./scripts/seed_sales_bulk.sh
   ```
 
 ### Makefile шорткаты
