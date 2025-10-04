@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPPO KZ · Responsive Dashboard Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header" role="banner">
+    <div class="header-inner">
+      <a class="brand" href="#" aria-label="OPPO KZ главная">
+        <picture>
+          <source srcset="images/oppo-logo.svg" type="image/svg+xml" />
+          <img
+            src="images/oppo-logo.svg"
+            srcset="images/oppo-logo.svg 1x, images/oppo-logo@2x.svg 2x"
+            sizes="(min-width: 769px) 160px, 120px"
+            alt="OPPO"
+            width="120"
+            height="32"
+          />
+        </picture>
+        <span class="brand-title">Data Platform</span>
+      </a>
+      <nav class="role-tabs" aria-label="Выбор роли">
+        <button class="tab-button is-active" data-role="admin" type="button">Админ</button>
+        <button class="tab-button" data-role="office" type="button">Офис</button>
+        <button class="tab-button" data-role="supervisor" type="button">Супервизор</button>
+        <button class="tab-button" data-role="promoter" type="button">Промоутер</button>
+        <button class="tab-button" data-role="trainer" type="button">Тренер</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="app-main" tabindex="-1">
+    <section class="dashboard" data-role-panel="admin" aria-labelledby="admin-title">
+      <header class="section-heading">
+        <h1 id="admin-title">Администратор · Управление платформой</h1>
+        <p class="section-subtitle">Мониторинг состояния сервисов и пользователей</p>
+      </header>
+
+      <div class="kpi-grid" data-kpi="admin"></div>
+
+      <section class="panel" aria-labelledby="admin-health-title">
+        <header class="panel-heading">
+          <h2 id="admin-health-title">Системные статусы</h2>
+        </header>
+        <div class="status-grid">
+          <article class="status-card" tabindex="0">
+            <h3>API</h3>
+            <p class="status-value" data-status="api">—</p>
+            <p class="status-note">/api/v1/health</p>
+          </article>
+          <article class="status-card" tabindex="0">
+            <h3>База данных</h3>
+            <p class="status-value" data-status="db">—</p>
+            <p class="status-note">PostgreSQL (Render)</p>
+          </article>
+          <article class="status-card" tabindex="0">
+            <h3>Metabase</h3>
+            <p class="status-value" data-status="bi">—</p>
+            <p class="status-note">bi.oppo.kz</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="admin-users-title">
+        <header class="panel-heading">
+          <h2 id="admin-users-title">Пользователи и роли</h2>
+        </header>
+        <div class="table-wrapper">
+          <table class="responsive-table" data-table="users">
+            <caption class="sr-only">Роли пользователей</caption>
+            <thead>
+              <tr>
+                <th scope="col" data-priority="primary">Имя</th>
+                <th scope="col" data-priority="primary">Роль</th>
+                <th scope="col" data-priority="secondary">Регион</th>
+                <th scope="col" data-priority="tertiary">Последний вход</th>
+                <th scope="col" data-priority="secondary">Статус</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- rows injected -->
+            </tbody>
+          </table>
+          <div class="mobile-table-filter" data-filter-for="users">
+            <label for="users-filter" class="sr-only">Фильтр пользователей</label>
+            <input id="users-filter" type="search" placeholder="Фильтр по имени или роли" />
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="dashboard is-hidden" data-role-panel="office" aria-labelledby="office-title">
+      <header class="section-heading">
+        <h1 id="office-title">Офис · Планирование и аналитика</h1>
+        <p class="section-subtitle">Планы по сети и магазинам, контроль бонусов</p>
+      </header>
+
+      <div class="kpi-grid" data-kpi="office"></div>
+
+      <div class="filter-region" data-filter-context="office">
+        <div class="filter-bar" role="region" aria-label="Фильтры аналитики">
+          <div class="filter-controls" data-filter-controls></div>
+          <button class="filter-clear" type="button" data-action="clear-filters">Сбросить</button>
+        </div>
+        <div class="filter-chips" aria-live="polite" data-filter-chips></div>
+      </div>
+
+      <section class="analytics" data-analytics="office">
+        <nav class="sub-tabs" aria-label="Аналитика офиса">
+          <button class="sub-tab-button is-active" data-target="office-overview" type="button">Все продажи</button>
+          <button class="sub-tab-button" data-target="office-models" type="button">По моделям</button>
+          <button class="sub-tab-button" data-target="office-bonuses" type="button">Бонусы</button>
+        </nav>
+
+        <div class="analytics-panel" data-panel="office-overview">
+          <div class="chart-toolbar">
+            <div class="time-grain" role="group" aria-label="Гранулярность">
+              <button type="button" class="grain-button is-active" data-grain="day">День</button>
+              <button type="button" class="grain-button" data-grain="week">Неделя</button>
+              <button type="button" class="grain-button" data-grain="month">Месяц</button>
+            </div>
+            <div class="metric-toggle" role="group" aria-label="Метрики">
+              <label><input type="checkbox" data-secondary-axis /> Вторая ось (ASP)</label>
+            </div>
+          </div>
+          <div class="chart-shell" role="img" aria-label="Динамика продаж">
+            <div class="chart-placeholder" data-chart="overview"></div>
+          </div>
+          <div class="comparison-chips" aria-live="polite" data-comparisons></div>
+        </div>
+
+        <div class="analytics-panel is-hidden" data-panel="office-models">
+          <div class="chart-shell" role="img" aria-label="Сравнение по моделям">
+            <div class="chart-placeholder" data-chart="models"></div>
+          </div>
+          <div class="legend" data-legend></div>
+        </div>
+
+        <div class="analytics-panel is-hidden" data-panel="office-bonuses">
+          <div class="table-wrapper">
+            <table class="responsive-table" data-table="bonuses">
+              <caption class="sr-only">Выплаты бонусов</caption>
+              <thead>
+              <tr>
+                <th scope="col" data-priority="primary">Магазин</th>
+                <th scope="col" data-priority="primary">Промоутер</th>
+                <th scope="col" data-priority="secondary">План (₸)</th>
+                <th scope="col" data-priority="secondary">Факт (₸)</th>
+                <th scope="col" data-priority="tertiary">Achv%</th>
+                <th scope="col" data-priority="secondary">Бонус</th>
+              </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <div class="mobile-table-filter" data-filter-for="bonuses">
+              <label for="bonuses-filter" class="sr-only">Фильтр бонусов</label>
+              <input id="bonuses-filter" type="search" placeholder="Фильтр по магазину" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="dashboard is-hidden" data-role-panel="supervisor" aria-labelledby="supervisor-title">
+      <header class="section-heading">
+        <h1 id="supervisor-title">Супервизор · Региональная аналитика</h1>
+        <p class="section-subtitle">Контроль сетей и промоутеров в закреплённых регионах</p>
+      </header>
+
+      <div class="kpi-grid" data-kpi="supervisor"></div>
+
+      <div class="filter-region" data-filter-context="supervisor">
+        <div class="filter-bar" role="region" aria-label="Фильтры супервизора">
+          <div class="filter-controls" data-filter-controls></div>
+          <button class="filter-clear" type="button" data-action="clear-filters">Сбросить</button>
+        </div>
+        <div class="filter-chips" aria-live="polite" data-filter-chips></div>
+      </div>
+
+      <section class="panel" aria-labelledby="supervisor-map-title">
+        <header class="panel-heading">
+          <h2 id="supervisor-map-title">Карта сетей</h2>
+        </header>
+        <div class="map-wrapper">
+          <svg class="map" viewBox="0 0 400 200" role="img" aria-label="Карта Казахстана">
+            <title>Карта регионов Казахстана</title>
+            <rect x="5" y="40" width="390" height="120" rx="12" class="map-plate"></rect>
+            <g class="map-markers" data-marker-group>
+              <g class="map-marker" data-city="Алматы" data-region="Юг" transform="translate(120,110)">
+                <circle r="12"></circle>
+                <text y="4">A</text>
+              </g>
+              <g class="map-marker" data-city="Астана" data-region="Центр" transform="translate(240,80)">
+                <circle r="12"></circle>
+                <text y="4">N</text>
+              </g>
+              <g class="map-marker" data-city="Шымкент" data-region="Юг" transform="translate(160,140)">
+                <circle r="12"></circle>
+                <text y="4">S</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section class="panel lazy" data-lazy="cities" aria-labelledby="supervisor-cities-title">
+        <header class="panel-heading">
+          <h2 id="supervisor-cities-title">Города и магазины</h2>
+        </header>
+        <div class="table-wrapper" data-lazy-target>
+          <!-- populated on demand -->
+        </div>
+      </section>
+    </section>
+
+    <section class="dashboard is-hidden" data-role-panel="promoter" aria-labelledby="promoter-title">
+      <header class="section-heading">
+        <h1 id="promoter-title">Промоутер · План vs Факт</h1>
+        <p class="section-subtitle">Личный план и бонусы за месяц</p>
+      </header>
+
+      <div class="kpi-grid" data-kpi="promoter"></div>
+
+      <section class="panel" aria-labelledby="promoter-sales-title">
+        <header class="panel-heading">
+          <h2 id="promoter-sales-title">Продажи по дням</h2>
+        </header>
+        <div class="chart-shell" role="img" aria-label="Личные продажи по дням">
+          <div class="chart-placeholder" data-chart="promoter"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="promoter-bonuses-title">
+        <header class="panel-heading">
+          <h2 id="promoter-bonuses-title">Бонусы</h2>
+        </header>
+        <div class="table-wrapper">
+          <table class="responsive-table" data-table="promoter-bonuses">
+            <caption class="sr-only">Бонусы промоутера</caption>
+            <thead>
+              <tr>
+                <th scope="col" data-priority="primary">Месяц</th>
+                <th scope="col" data-priority="secondary">План (₸)</th>
+                <th scope="col" data-priority="secondary">Факт (₸)</th>
+                <th scope="col" data-priority="tertiary">Achv%</th>
+                <th scope="col" data-priority="primary">Бонус</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="mobile-table-filter" data-filter-for="promoter-bonuses">
+            <label for="promoter-bonuses-filter" class="sr-only">Фильтр бонусов</label>
+            <input id="promoter-bonuses-filter" type="search" placeholder="Фильтр по месяцу" />
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="dashboard is-hidden" data-role-panel="trainer" aria-labelledby="trainer-title">
+      <header class="section-heading">
+        <h1 id="trainer-title">Тренер · Обучение промоутеров</h1>
+        <p class="section-subtitle">План обучения и статус по курсам</p>
+      </header>
+
+      <div class="kpi-grid" data-kpi="trainer"></div>
+
+      <section class="panel" aria-labelledby="trainer-schedule-title">
+        <header class="panel-heading">
+          <h2 id="trainer-schedule-title">Ближайшие тренинги</h2>
+        </header>
+        <div class="table-wrapper">
+          <table class="responsive-table" data-table="training">
+            <caption class="sr-only">Расписание тренингов</caption>
+            <thead>
+              <tr>
+                <th scope="col" data-priority="primary">Дата</th>
+                <th scope="col" data-priority="primary">Город</th>
+                <th scope="col" data-priority="secondary">Тема</th>
+                <th scope="col" data-priority="tertiary">Участники</th>
+                <th scope="col" data-priority="secondary">Статус</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="mobile-table-filter" data-filter-for="training">
+            <label for="training-filter" class="sr-only">Фильтр тренингов</label>
+            <input id="training-filter" type="search" placeholder="Фильтр по теме" />
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" data-modal-backdrop hidden></div>
+
+  <dialog class="app-modal" data-modal role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 id="modal-title">Детали</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Закрыть">×</button>
+      </header>
+      <div class="modal-body" data-modal-body></div>
+      <footer class="modal-footer">
+        <button type="button" class="modal-action" data-modal-close>Закрыть</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <template id="city-table-template">
+    <div class="table-wrapper">
+      <table class="responsive-table" data-table="cities">
+        <caption class="sr-only">Города и магазины</caption>
+        <thead>
+          <tr>
+            <th scope="col" data-priority="primary">Город</th>
+            <th scope="col" data-priority="secondary">Сеть</th>
+            <th scope="col" data-priority="secondary">Магазины</th>
+            <th scope="col" data-priority="tertiary">Активные промоутеры</th>
+            <th scope="col" data-priority="secondary">Статус</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="mobile-table-filter" data-filter-for="cities">
+        <label for="cities-filter" class="sr-only">Фильтр городов</label>
+        <input id="cities-filter" type="search" placeholder="Фильтр по городу" />
+      </div>
+    </div>
+  </template>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
