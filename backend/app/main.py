@@ -19,7 +19,7 @@ from app.api.v1.api import api_router
 from app.core.security import get_password_hash
 from app.db.session import SessionLocal, engine
 from app.db.base_class import Base
-from app.db.models.user import User
+from app.models.user import User, UserStatus
 
 # -----------------------------------------------------------------------------
 # Конфигурация из ENV
@@ -268,8 +268,8 @@ def seed_admin(db: Session) -> None:
             conn.execute(
                 text(
                     """
-                    INSERT INTO public.users (id, email, full_name, role, password_hash, is_active)
-                    VALUES (:id, :email, :full_name, CAST(:role AS userrole), :pwd, true)
+                    INSERT INTO public.users (id, email, full_name, role, password_hash, status)
+                    VALUES (:id, :email, :full_name, CAST(:role AS userrole), :pwd, 'active')
                     ON CONFLICT (email) DO NOTHING
                     """
                 ),
@@ -288,8 +288,8 @@ def seed_admin(db: Session) -> None:
         email=email,
         full_name="Administrator",
         role="admin",
-        password_hash=pwd_hash,
-        is_active=True,
+        hashed_password=pwd_hash,
+        status=UserStatus.active,
     )
     db.add(admin)
     db.commit()

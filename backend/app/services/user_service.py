@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_password_hash
 from app.core.settings import settings
 from app.db.session import SessionLocal
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserStatus
 from app.schemas.user import UserCreateMinimal
 
 
@@ -31,6 +31,7 @@ def create_user(db: Session, user_in: UserCreateMinimal) -> User:
         full_name=user_in.full_name,
         role=user_in.role,
         hashed_password=get_password_hash(user_in.password),
+        status=UserStatus.active,
     )
     db.add(user)
     db.commit()
