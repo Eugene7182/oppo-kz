@@ -13,13 +13,17 @@ from app.feature_flags.flags import flags
 class FeatureDisabled(Exception):
     """Raised when a feature is disabled."""
 
+    def __init__(self, feature: str):
+        self.feature = feature
+        super().__init__(feature)
+
 
 def check_feature(name: str) -> Callable[[], None]:
     """Return FastAPI dependency checking a feature flag."""
 
     def dependency() -> None:
         if not getattr(flags, name, False):
-            raise FeatureDisabled
+            raise FeatureDisabled(name)
 
     return dependency
 

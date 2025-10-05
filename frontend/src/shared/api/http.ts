@@ -3,6 +3,7 @@ import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { addOutboxRecord } from "../lib/indexedDb";
 import { createId } from "../lib/createId";
 import { mockApi } from "./mock";
+import type { InsightSummarizeRequest } from "../../entities/insight/types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 const API_ENABLED = Boolean(BASE_URL);
@@ -83,6 +84,10 @@ export const api = {
   bonus: {
     schemes: () => (API_ENABLED ? http.get("/api/v1/bonus/schemes") : mockApi.bonus.schemes()),
     payouts: (params?: unknown) => (API_ENABLED ? http.get("/api/v1/bonus/payouts", { params }) : mockApi.bonus.payouts()),
+  },
+  insights: {
+    summarize: (body: InsightSummarizeRequest) =>
+      API_ENABLED ? http.post("/api/v1/insights/summarize", body) : mockApi.insights.summarize(),
   },
   analytics: {
     kpi: (params?: unknown) => (API_ENABLED ? http.get("/api/v1/analytics/kpi", { params }) : Promise.resolve({ data: [] })),

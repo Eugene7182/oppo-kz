@@ -8,8 +8,9 @@ from datetime import datetime, timedelta
 from typing import Generator, Optional
 import uuid
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text, inspect
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
@@ -20,6 +21,7 @@ from app.core.security import get_password_hash
 from app.db.session import SessionLocal, engine
 from app.db.base_class import Base
 from app.models.user import User, UserStatus
+from app.feature_flags.deps import FeatureDisabled
 
 # -----------------------------------------------------------------------------
 # Конфигурация из ENV
@@ -301,6 +303,13 @@ def seed_admin(db: Session) -> None:
 # FastAPI
 # -----------------------------------------------------------------------------
 app = FastAPI(title=PROJECT_NAME)
+
+
+@app.exception_handler(FeatureDisabled)
+async def feature_disabled_handler(request: Request, exc: FeatureDisabled) -> JSONResponse:  # noqa: D401
+    """Возвращает 404 при обращении к выключенной фиче."""
+
+    return JSONResponse(status_code=404, content={"detail": "Feature disabled", "code": "feature_disabled"})
 
 # CORS
 origins = [o.strip() for o in CORS_ORIGINS.split(",") if o.strip()]

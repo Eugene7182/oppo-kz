@@ -11,6 +11,9 @@ import { SyncControl } from "../../../features/sync-control";
 import { salesMock } from "../../../entities/sale/mock";
 import { products } from "../../../entities/product/mock";
 import { plansMock } from "../../../entities/plan/mock";
+import { ActionableInsightsWidget } from "../../../widgets/ActionableInsights";
+import { insightSampleRequest } from "../../../entities/insight/mock";
+import { featureFlags } from "../../../shared/config/featureFlags";
 
 const tabs = [
   { id: "all", label: "Все продажи", icon: BarChart4 },
@@ -93,6 +96,7 @@ export function OfficeAnalyticsPage() {
       </div>
       <FilterBar products={products} onChange={setFilters} />
       <KpiCards items={kpis} />
+      {featureFlags.aiInsights && <ActionableInsightsWidget request={insightSampleRequest} />}
       <div className="flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <button

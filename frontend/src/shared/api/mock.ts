@@ -2,6 +2,7 @@ import { bonusPayoutsMock, bonusSchemesMock } from "../../entities/bonus/mock";
 import { dictionariesMock } from "../../entities/dict/mock";
 import { plansMock } from "../../entities/plan/mock";
 import { salesMock } from "../../entities/sale/mock";
+import { insightSampleResponse } from "../../entities/insight/mock";
 import { getAllMockUsers } from "../../entities/user/mock";
 
 export const mockApi = {
@@ -24,5 +25,8 @@ export const mockApi = {
   bonus: {
     schemes: async () => ({ data: bonusSchemesMock }),
     payouts: async () => ({ data: bonusPayoutsMock }),
+  },
+  insights: {
+    summarize: async () => ({ data: insightSampleResponse }),
   },
 };
