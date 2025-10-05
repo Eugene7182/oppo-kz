@@ -1,0 +1,138 @@
+name: backend-ci
+
+on:
+  push:
+    branches: ["develop"]
+    tags: ["v*", "release-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  context:
+    name: Determine deployment context
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_env: ${{ steps.detect.outputs.deploy_env }}
+      release_tag: ${{ steps.detect.outputs.release_tag }}
+      image_tag: ${{ steps.detect.outputs.image_tag }}
+    steps:
+      - name: Detect target
+        id: detect
+        run: |
+          ref="${GITHUB_REF}"
+          if [[ "$ref" == refs/tags/* ]]; then
+            echo "deploy_env=prod" >> "$GITHUB_OUTPUT"
+            echo "release_tag=${ref#refs/tags/}" >> "$GITHUB_OUTPUT"
+            echo "image_tag=${ref#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy_env=staging" >> "$GITHUB_OUTPUT"
+            echo "release_tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+            echo "image_tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+  tests:
+    name: Backend tests (matrix)
+    needs: context
+    uses: ./.github/workflows/reusable-python-ci.yml
+    with:
+      python-versions: '["3.11", "3.12"]'
+      cache-key-suffix: "-backend"
+
+  build-and-deploy:
+    name: Build, push and deploy to ECS
+    needs: [context, tests]
+    if: needs.context.outputs.deploy_env == 'prod'
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: me-central-1
+      ECR_REPOSITORY: oppo-kz/prod/backend
+      IMAGE_TAG: ${{ needs.context.outputs.image_tag }}
+      TASK_FAMILY: oppo-kz-prod-backend
+      ECS_CLUSTER: ${{ secrets.AWS_ECS_CLUSTER_NAME }}
+      ECS_SERVICE: ${{ secrets.AWS_ECS_SERVICE_NAME }}
+      ECS_SUBNETS: ${{ secrets.AWS_ECS_SUBNETS }}
+      ECS_SECURITY_GROUPS: ${{ secrets.AWS_ECS_SECURITY_GROUPS }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        working-directory: backend
+        run: |
+          docker build -t ${ECR_REPOSITORY}:${IMAGE_TAG} .
+          docker tag ${ECR_REPOSITORY}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+
+      - name: Push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+
+      - name: Render new task definition
+        id: render
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          set -euo pipefail
+          aws ecs describe-task-definition --task-definition ${TASK_FAMILY} > task-def.json
+          cat task-def.json | jq '.taskDefinition | {family, networkMode, requiresCompatibilities, cpu, memory, executionRoleArn, taskRoleArn, containerDefinitions, volumes, placementConstraints, runtimePlatform}' \
+            | jq '.containerDefinitions[0].image = "'"${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"'"' > new-task-def.json
+          TASK_DEF_ARN=$(aws ecs register-task-definition --cli-input-json file://new-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "task_definition_arn=${TASK_DEF_ARN}" >> "$GITHUB_OUTPUT"
+
+      - name: Run Alembic migrations (Fargate one-off)
+        env:
+          TASK_DEFINITION_ARN: ${{ steps.render.outputs.task_definition_arn }}
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra SUBNETS <<< "${ECS_SUBNETS}"
+          IFS=',' read -ra SGS <<< "${ECS_SECURITY_GROUPS}"
+          SUBNET_ARGS=$(printf '"%s",' "${SUBNETS[@]}")
+          SG_ARGS=$(printf '"%s",' "${SGS[@]}")
+          TASK_ARN=$(aws ecs run-task \
+            --cluster "${ECS_CLUSTER}" \
+            --launch-type FARGATE \
+            --task-definition "${TASK_DEFINITION_ARN}" \
+            --count 1 \
+            --platform-version 1.4.0 \
+            --network-configuration "{\"awsvpcConfiguration\":{\"assignPublicIp\":\"DISABLED\",\"subnets\":[${SUBNET_ARGS%,}],\"securityGroups\":[${SG_ARGS%,}]}}" \
+            --overrides '{"containerOverrides":[{"name":"backend","command":["alembic","-c","alembic.ini","upgrade","head"]}]}' \
+            --query 'tasks[0].taskArn' --output text)
+          aws ecs wait tasks-stopped --cluster "${ECS_CLUSTER}" --tasks "${TASK_ARN}"
+          EXIT_CODE=$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks "${TASK_ARN}" --query 'tasks[0].containers[0].exitCode' --output text)
+          if [ "${EXIT_CODE}" != "0" ]; then
+            echo "Alembic migration failed" >&2
+            exit 1
+          fi
+
+      - name: Deploy new revision to ECS service
+        env:
+          TASK_DEFINITION_ARN: ${{ steps.render.outputs.task_definition_arn }}
+        run: |
+          aws ecs update-service --cluster "${ECS_CLUSTER}" --service "${ECS_SERVICE}" --task-definition "${TASK_DEFINITION_ARN}" --force-new-deployment
+
+      - name: Wait for service stability
+        run: |
+          aws ecs wait services-stable --cluster "${ECS_CLUSTER}" --services "${ECS_SERVICE}"
+
+      - name: Store task definition artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecs-task-def-${{ needs.context.outputs.image_tag }}
+          path: new-task-def.json

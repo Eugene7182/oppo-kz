@@ -17,6 +17,9 @@ infra/
   render.yaml
   render.md
   scripts/
+  aws/
+    README.md
+    prod/
 .env.example
 ```
 
@@ -45,6 +48,11 @@ infra/
 - `SECRET_KEY`
 - `CORS_ORIGINS`
 - `VITE_API_URL`
+- дополнительные переменные для продакшена описаны в `infra/ENV.md`
+
+## Инфраструктура
+- **Staging** — Render (см. `infra/render.md`, `render.yaml`). Автодеплой из ветки `develop` через GitHub Actions `frontend-ci`/`deploy_render` и backend веб-сервис Render.
+- **Production** — AWS (Terraform в `infra/aws/prod`). Bootstrap-скрипт: `scripts/bootstrap_aws_infra.sh`.
 
 ## Запуск локально
 ```bash

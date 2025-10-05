@@ -1,0 +1,101 @@
+name: frontend-ci
+
+on:
+  push:
+    branches: ["develop"]
+    tags: ["v*", "release-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  context:
+    name: Determine deployment context
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_env: ${{ steps.detect.outputs.deploy_env }}
+      release_tag: ${{ steps.detect.outputs.release_tag }}
+    steps:
+      - name: Detect target
+        id: detect
+        run: |
+          ref="${GITHUB_REF}"
+          if [[ "$ref" == refs/tags/* ]]; then
+            echo "deploy_env=prod" >> "$GITHUB_OUTPUT"
+            echo "release_tag=${ref#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy_env=staging" >> "$GITHUB_OUTPUT"
+            echo "release_tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build frontend artifact
+    needs: context
+    uses: ./.github/workflows/reusable-frontend-ci.yml
+    with:
+      node-version: '20'
+      build-command: 'npm run build'
+
+  deploy-render:
+    name: Deploy staging to Render
+    needs: [context, build]
+    if: needs.context.outputs.deploy_env == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist-${{ github.sha }}
+          path: dist
+
+      - name: Trigger Render static site deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_STATIC_SITE_ID: ${{ secrets.RENDER_STATIC_SITE_ID }}
+        run: |
+          if [[ -z "${RENDER_API_KEY}" || -z "${RENDER_STATIC_SITE_ID}" ]]; then
+            echo "Render credentials not configured; skipping" && exit 0
+          fi
+          DEPLOY_ID=$(curl -sS -X POST "https://api.render.com/v1/static-sites/${RENDER_STATIC_SITE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" -H "Content-Type: application/json" \
+            --data '{}'
+          )
+          echo "Triggered deploy: ${DEPLOY_ID}"
+
+  deploy-aws:
+    name: Upload to S3 and invalidate CloudFront
+    needs: [context, build]
+    if: needs.context.outputs.deploy_env == 'prod'
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: me-central-1
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist-${{ github.sha }}
+          path: dist
+
+      - name: Sync to S3 static bucket
+        run: |
+          aws s3 sync dist/ s3://${{ secrets.AWS_FRONTEND_BUCKET }} --delete --cache-control max-age=31536000,public
+          aws s3 cp dist/index.html s3://${{ secrets.AWS_FRONTEND_BUCKET }}/index.html --cache-control no-cache --content-type text/html
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --paths '/*'
+
+      - name: Publish build manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-manifest-${{ needs.context.outputs.release_tag }}
+          path: dist
+          if-no-files-found: error

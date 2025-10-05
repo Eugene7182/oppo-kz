@@ -1,0 +1,58 @@
+name: reusable-python-ci
+
+on:
+  workflow_call:
+    inputs:
+      python-versions:
+        description: "JSON массив версий Python"
+        required: true
+        type: string
+      cache-key-suffix:
+        description: "Суффикс ключа кэша"
+        required: false
+        default: ""
+        type: string
+    secrets:
+      additional-pip-index:
+        required: false
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ${{ fromJson(inputs.python-versions) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ matrix.python }}-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}${{ inputs.cache-key-suffix }}
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run backend tests
+        env:
+          PYTHONPATH: backend
+        run: |
+          pytest backend/tests -q
+
+      - name: Upload pytest artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report-${{ matrix.python }}
+          path: backend/.pytest_cache
+          if-no-files-found: ignore
