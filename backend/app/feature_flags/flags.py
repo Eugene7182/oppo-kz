@@ -27,6 +27,10 @@ class Flags:
     def ENABLE_ANALYTICS(self) -> bool:  # включение аналитики
         return settings.enable_analytics
 
+    @property
+    def FEATURE_AI_INSIGHTS(self) -> bool:  # включение AI-инсайтов
+        return settings.feature_ai_insights
+
 
 flags = Flags()
 

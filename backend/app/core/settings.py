@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     enable_messages: bool = False
     enable_imports: bool = False
     enable_analytics: bool = False
+    feature_ai_insights: bool = False
+
+    openai_api_key: str | None = None
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-4o-mini"
 
     @field_validator("database_url", mode="before")
     @classmethod
