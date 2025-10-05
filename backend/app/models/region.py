@@ -19,6 +19,7 @@ class Region(Base):
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     stores = relationship("Store", back_populates="region", cascade="all, delete-orphan")
+    cities = relationship("City", back_populates="region", cascade="all, delete-orphan")
 
 
 __all__ = ["Region"]

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import JWT_SECRET, JWT_ALGO, ACCESS_TOKEN_EXPIRE_MIN
 from app.db.session import SessionLocal
-from app.db.models.user import User
+from app.models.user import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
