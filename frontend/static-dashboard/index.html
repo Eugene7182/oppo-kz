@@ -33,8 +33,26 @@
         <button class="tab-button" data-role="promoter" type="button">Промоутер</button>
         <button class="tab-button" data-role="trainer" type="button">Тренер</button>
       </nav>
+      <div class="sync-controls" role="region" aria-label="Синхронизация">
+        <button class="sync-button" data-action="sync-now" type="button">Синхронизировать</button>
+        <span class="queue-indicator" data-queue-count>Очередь: 0</span>
+      </div>
     </div>
   </header>
+
+  <div
+    class="network-banner"
+    data-network-banner
+    role="status"
+    aria-live="assertive"
+    hidden
+  >
+    <div class="network-banner__message" data-network-message>Соединение: оффлайн</div>
+    <div class="network-banner__actions">
+      <button type="button" class="sync-button is-inline" data-action="sync-now">Синхронизировать</button>
+      <span class="queue-indicator" data-queue-count>Очередь: 0</span>
+    </div>
+  </div>
 
   <main id="main" class="app-main" tabindex="-1">
     <section class="dashboard" data-role-panel="admin" aria-labelledby="admin-title">
@@ -73,7 +91,7 @@
           <h2 id="admin-users-title">Пользователи и роли</h2>
         </header>
         <div class="table-wrapper">
-          <table class="responsive-table" data-table="users">
+          <table class="responsive-table" data-table="users" data-source="users">
             <caption class="sr-only">Роли пользователей</caption>
             <thead>
               <tr>
@@ -145,7 +163,7 @@
 
         <div class="analytics-panel is-hidden" data-panel="office-bonuses">
           <div class="table-wrapper">
-            <table class="responsive-table" data-table="bonuses">
+            <table class="responsive-table" data-table="bonuses" data-source="plans">
               <caption class="sr-only">Выплаты бонусов</caption>
               <thead>
               <tr>
@@ -155,6 +173,7 @@
                 <th scope="col" data-priority="secondary">Факт (₸)</th>
                 <th scope="col" data-priority="tertiary">Achv%</th>
                 <th scope="col" data-priority="secondary">Бонус</th>
+                <th scope="col" data-priority="secondary">Синхронизация</th>
               </tr>
               </thead>
               <tbody></tbody>
@@ -242,7 +261,7 @@
           <h2 id="promoter-bonuses-title">Бонусы</h2>
         </header>
         <div class="table-wrapper">
-          <table class="responsive-table" data-table="promoter-bonuses">
+          <table class="responsive-table" data-table="promoter-bonuses" data-source="plans-monthly">
             <caption class="sr-only">Бонусы промоутера</caption>
             <thead>
               <tr>
@@ -251,6 +270,7 @@
                 <th scope="col" data-priority="secondary">Факт (₸)</th>
                 <th scope="col" data-priority="tertiary">Achv%</th>
                 <th scope="col" data-priority="primary">Бонус</th>
+                <th scope="col" data-priority="secondary">Статус</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -298,20 +318,30 @@
     </section>
   </main>
 
-  <div class="modal-backdrop" data-modal-backdrop hidden></div>
+  <div class="modal-backdrop" data-modal-backdrop role="presentation" aria-hidden="true" hidden></div>
 
-  <dialog class="app-modal" data-modal role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
-    <div class="modal-content">
+  <dialog
+    class="app-modal"
+    data-modal
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
+    aria-describedby="modal-body"
+    hidden
+  >
+    <div class="modal-content" role="document">
       <header class="modal-header">
         <h2 id="modal-title">Детали</h2>
         <button type="button" class="modal-close" data-modal-close aria-label="Закрыть">×</button>
       </header>
-      <div class="modal-body" data-modal-body></div>
+      <div class="modal-body" id="modal-body" data-modal-body></div>
       <footer class="modal-footer">
         <button type="button" class="modal-action" data-modal-close>Закрыть</button>
       </footer>
     </div>
   </dialog>
+
+  <div class="toast-stack" data-toast-stack aria-live="polite" aria-atomic="true"></div>
 
   <template id="city-table-template">
     <div class="table-wrapper">
