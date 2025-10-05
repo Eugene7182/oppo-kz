@@ -1,0 +1,19 @@
+-- Рекомендации по обновлению материализованных представлений
+-- 1) Ночное полное обновление (например, 03:00 UTC+6)
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_sales_daily;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_sales_weekly_iso;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_sales_monthly;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_plan_vs_fact_promoter_month;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_plan_vs_fact_region_month;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_sales_city_month;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_bonus_liability_month;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_seasonality_weekly;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_pops;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_anomalies_sales;
+--
+-- 2) Почасовое окно (в рабочее время):
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_sales_daily;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_bonus_liability_month;
+--    REFRESH MATERIALIZED VIEW CONCURRENTLY analytics.mv_pops; -- для оперативного PoP
+--
+-- Важно: первый REFRESH выполняется без флага CONCURRENTLY (или с `WITH NO DATA`) после начальной загрузки.
