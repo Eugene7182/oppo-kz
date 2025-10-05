@@ -1,49 +1,23 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import React from "react";
+import ReactDOM from "react-dom/client";
 
-import ErrorBoundary from './components/ErrorBoundary'
-import RequireAuth from './components/RequireAuth'
-import RequireRole from './components/RequireRole'
-import Layout from './components/Layout'
+import { AppProviders } from "./app/providers/AppProviders";
+import { AppRoutes } from "./app/routes";
+import { registerServiceWorker } from "./app/service-worker/registerServiceWorker";
 
-import LoginPage from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import InvitesPage from './pages/Invites'
-import InviteRegisterPage from './pages/InviteRegister'
-import { getApiBase } from './shared/http'
+import "./app/styles.css";
 
-// Создаём роутер как раньше…
-const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register/:code', element: <InviteRegisterPage /> },
-  {
-    path: '/',
-    element: (
-      <RequireAuth>
-        <Layout><Dashboard /></Layout>
-      </RequireAuth>
-    ),
-  },
-  {
-    path: '/invites',
-    element: (
-      <RequireAuth>
-        <RequireRole roles={['admin', 'office']}>
-          <Layout><InvitesPage /></Layout>
-        </RequireRole>
-      </RequireAuth>
-    ),
-  },
-])
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
 
-// Полезный лог — сразу видно, какой base URL реально используется
-console.info('[HTTP] API base =', getApiBase())
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <RouterProvider router={router} />
-    </ErrorBoundary>
-  </React.StrictMode>
-)
+    <AppProviders>
+      <AppRoutes />
+    </AppProviders>
+  </React.StrictMode>,
+);
+
+registerServiceWorker();
