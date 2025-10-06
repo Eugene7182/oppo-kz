@@ -224,13 +224,26 @@ def create_correction(
     sale_id: str,
     payload: SaleCorrectionCreate,
     db: Session = Depends(get_db),
-    current: User = Depends(require_roles([UserRole.supervisor, UserRole.office, UserRole.admin])),
+    current: User = Depends(get_current_user),
 ) -> SaleCorrection:
-    sale = db.query(Sale).filter(Sale.id == sale_id).one_or_none()
+    role = UserRole(current.role)
+    if role not in {UserRole.promoter, UserRole.supervisor, UserRole.office, UserRole.admin}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+    sale = (
+        db.query(Sale)
+        .options(joinedload(Sale.store))
+        .filter(Sale.id == sale_id)
+        .one_or_none()
+    )
     if not sale:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sale not found")
     if not sale.locked_at:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Sale must be locked")
+    _ensure_sale_permissions(sale, current)
+    if role == UserRole.promoter and sale.promoter_id != current.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
     correction = SaleCorrection(
         sale_id=sale.id,
         created_by=current.id,

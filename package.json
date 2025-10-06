@@ -4,6 +4,11 @@
   "scripts": {
     "postinstall": "npm --prefix frontend install --include=dev --no-audit --no-fund",
     "dev": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend run build"
+    "build": "npm --prefix frontend run build",
+    "test:e2e": "npx playwright test --config e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.2",
+    "ts-node": "^10.9.2"
   }
 }

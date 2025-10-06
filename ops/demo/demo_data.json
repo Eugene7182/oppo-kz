@@ -1,0 +1,341 @@
+{
+  "reference_date": "2024-09-15",
+  "password": "DemoPass123!",
+  "regions": [
+    {
+      "key": "region_almaty",
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "Алматинский регион",
+      "cities": [
+        {
+          "key": "city_almaty",
+          "id": "11111111-1111-1111-1111-111111111112",
+          "name": "Алматы"
+        },
+        {
+          "key": "city_talgar",
+          "id": "11111111-1111-1111-1111-111111111113",
+          "name": "Талгар"
+        }
+      ]
+    },
+    {
+      "key": "region_astana",
+      "id": "22222222-2222-2222-2222-222222222221",
+      "name": "Астана",
+      "cities": [
+        {
+          "key": "city_astana",
+          "id": "22222222-2222-2222-2222-222222222222",
+          "name": "Астана"
+        }
+      ]
+    }
+  ],
+  "networks": [
+    {
+      "key": "network_technodom",
+      "id": "33333333-3333-3333-3333-333333333331",
+      "name": "Technodom",
+      "stores": [
+        {
+          "key": "store_technodom_mega",
+          "id": "44444444-4444-4444-4444-444444444441",
+          "code": "TD-ALM-001",
+          "name": "Technodom Mega Center",
+          "region_key": "region_almaty",
+          "city_key": "city_almaty",
+          "address": "пр. Абая 247/8"
+        },
+        {
+          "key": "store_technodom_khan",
+          "id": "44444444-4444-4444-4444-444444444442",
+          "code": "TD-AST-001",
+          "name": "Technodom Khan Shatyr",
+          "region_key": "region_astana",
+          "city_key": "city_astana",
+          "address": "пр. Кабанбай батыра 62"
+        }
+      ]
+    },
+    {
+      "key": "network_sulpak",
+      "id": "33333333-3333-3333-3333-333333333332",
+      "name": "Sulpak",
+      "stores": [
+        {
+          "key": "store_sulpak_dostyk",
+          "id": "44444444-4444-4444-4444-444444444443",
+          "code": "SP-ALM-010",
+          "name": "Sulpak Dostyk Plaza",
+          "region_key": "region_almaty",
+          "city_key": "city_almaty",
+          "address": "ул. Кабанбай батыра 85"
+        }
+      ]
+    }
+  ],
+  "products": [
+    {
+      "key": "product_reno11",
+      "id": "55555555-5555-5555-5555-555555555551",
+      "sku": "OPPO-RENO11",
+      "name": "OPPO Reno11 5G",
+      "status": "active",
+      "price": 299990,
+      "attrs": {
+        "memory": "12/256",
+        "color": "Green"
+      },
+      "valid_from": { "anchor": "reference_date", "offset_days": -180 },
+      "valid_to": null
+    },
+    {
+      "key": "product_reno10",
+      "id": "55555555-5555-5555-5555-555555555552",
+      "sku": "OPPO-RENO10",
+      "name": "OPPO Reno10 5G",
+      "status": "active",
+      "price": 259990,
+      "attrs": {
+        "memory": "8/256",
+        "color": "Silver"
+      },
+      "valid_from": { "anchor": "reference_date", "offset_days": -360 },
+      "valid_to": null
+    },
+    {
+      "key": "product_a98",
+      "id": "55555555-5555-5555-5555-555555555553",
+      "sku": "OPPO-A98",
+      "name": "OPPO A98",
+      "status": "active",
+      "price": 199990,
+      "attrs": {
+        "memory": "8/256",
+        "color": "Black"
+      },
+      "valid_from": { "anchor": "reference_date", "offset_days": -120 },
+      "valid_to": null
+    }
+  ],
+  "users": [
+    {
+      "key": "user_admin",
+      "id": "66666666-6666-6666-6666-666666666661",
+      "email": "admin@oppo.kz",
+      "full_name": "Супер Админ",
+      "role": "admin",
+      "region_key": null
+    },
+    {
+      "key": "user_office",
+      "id": "66666666-6666-6666-6666-666666666662",
+      "email": "office@oppo.kz",
+      "full_name": "Офис OPPO",
+      "role": "office",
+      "region_key": null
+    },
+    {
+      "key": "user_supervisor_almaty",
+      "id": "66666666-6666-6666-6666-666666666663",
+      "email": "supervisor.almaty@oppo.kz",
+      "full_name": "Супервизор Алматы",
+      "role": "supervisor",
+      "region_key": "region_almaty"
+    },
+    {
+      "key": "user_promoter_aidos",
+      "id": "66666666-6666-6666-6666-666666666664",
+      "email": "aidos@oppo.kz",
+      "full_name": "Айдос Каирбеков",
+      "role": "promoter",
+      "region_key": "region_almaty"
+    },
+    {
+      "key": "user_promoter_assel",
+      "id": "66666666-6666-6666-6666-666666666665",
+      "email": "assel@oppo.kz",
+      "full_name": "Асель Жумабаева",
+      "role": "promoter",
+      "region_key": "region_almaty"
+    }
+  ],
+  "bonus_schemes": [
+    {
+      "key": "scheme_technodom_2024q2",
+      "id": "77777777-7777-7777-7777-777777777771",
+      "network_key": "network_technodom",
+      "valid_from": { "anchor": "previous_month_start", "offset_days": 0 },
+      "valid_to": null,
+      "status": "published",
+      "rules": [
+        {
+          "selector_type": "series",
+          "selector_value": "Reno",
+          "amount": 15000
+        },
+        {
+          "selector_type": "sku",
+          "selector_value": "OPPO-A98",
+          "amount": 10000
+        }
+      ]
+    }
+  ],
+  "plans": [
+    {
+      "key": "plan_aidos_current",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_technodom_mega",
+      "period_offset_months": 0,
+      "target_units": 40,
+      "target_revenue": 8000000
+    },
+    {
+      "key": "plan_assel_current",
+      "promoter_key": "user_promoter_assel",
+      "store_key": "store_sulpak_dostyk",
+      "period_offset_months": 0,
+      "target_units": 25,
+      "target_revenue": 4500000
+    }
+  ],
+  "sales": [
+    {
+      "key": "sale_open_current",
+      "id": "88888888-8888-8888-8888-888888888881",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_technodom_mega",
+      "sku_key": "product_reno11",
+      "qty": 3,
+      "price": 299990,
+      "date": { "anchor": "current_month_start", "offset_days": 4 },
+      "locked": false,
+      "tags": ["mtd", "supervisor_edit", "week_minus_1"]
+    },
+    {
+      "key": "sale_week_minus1",
+      "id": "88888888-8888-8888-8888-888888888882",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_technodom_mega",
+      "sku_key": "product_a98",
+      "qty": 4,
+      "price": 199990,
+      "date": { "anchor": "last_week_start", "offset_days": 2 },
+      "locked": false,
+      "tags": ["week_minus_1"]
+    },
+    {
+      "key": "sale_week_minus2",
+      "id": "88888888-8888-8888-8888-888888888883",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_sulpak_dostyk",
+      "sku_key": "product_a98",
+      "qty": 2,
+      "price": 209990,
+      "date": { "anchor": "two_weeks_ago_start", "offset_days": 3 },
+      "locked": false,
+      "tags": ["week_minus_2"]
+    },
+    {
+      "key": "sale_previous_month_locked",
+      "id": "88888888-8888-8888-8888-888888888884",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_technodom_mega",
+      "sku_key": "product_reno10",
+      "qty": 5,
+      "price": 259990,
+      "date": { "anchor": "previous_month_start", "offset_days": 6 },
+      "locked": false,
+      "tags": ["previous_month"]
+    },
+    {
+      "key": "sale_previous_month_reference",
+      "id": "88888888-8888-8888-8888-888888888885",
+      "promoter_key": "user_promoter_assel",
+      "store_key": "store_sulpak_dostyk",
+      "sku_key": "product_reno11",
+      "qty": 3,
+      "price": 299990,
+      "date": { "anchor": "previous_month_start", "offset_days": 12 },
+      "locked": false,
+      "tags": ["previous_month", "promoter_lock_target"]
+    },
+    {
+      "key": "sale_two_months_ago",
+      "id": "88888888-8888-8888-8888-888888888886",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_technodom_mega",
+      "sku_key": "product_reno11",
+      "qty": 6,
+      "price": 289990,
+      "date": { "anchor": "two_months_ago_start", "offset_days": 9 },
+      "locked": false,
+      "tags": ["two_months_ago"]
+    },
+    {
+      "key": "sale_yoy_prev_month_store1",
+      "id": "88888888-8888-8888-8888-888888888887",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_technodom_mega",
+      "sku_key": "product_reno11",
+      "qty": 4,
+      "price": 249990,
+      "date": { "anchor": "previous_month_start_last_year", "offset_days": 6 },
+      "locked": true,
+      "tags": ["yoy_prev_year"]
+    },
+    {
+      "key": "sale_yoy_prev_month_store2",
+      "id": "88888888-8888-8888-8888-888888888888",
+      "promoter_key": "user_promoter_assel",
+      "store_key": "store_sulpak_dostyk",
+      "sku_key": "product_a98",
+      "qty": 3,
+      "price": 199990,
+      "date": { "anchor": "previous_month_start_last_year", "offset_days": 12 },
+      "locked": true,
+      "tags": ["yoy_prev_year"]
+    },
+    {
+      "key": "sale_lfl_last_year_store1",
+      "id": "88888888-8888-8888-8888-888888888889",
+      "promoter_key": "user_promoter_aidos",
+      "store_key": "store_technodom_mega",
+      "sku_key": "product_reno11",
+      "qty": 2,
+      "price": 279990,
+      "date": { "anchor": "current_month_start_last_year", "offset_days": 4 },
+      "locked": true,
+      "tags": ["lfl_last_year"]
+    },
+    {
+      "key": "sale_lfl_last_year_store2",
+      "id": "88888888-8888-8888-8888-888888888890",
+      "promoter_key": "user_promoter_assel",
+      "store_key": "store_sulpak_dostyk",
+      "sku_key": "product_a98",
+      "qty": 1,
+      "price": 199990,
+      "date": { "anchor": "current_month_start_last_year", "offset_days": 10 },
+      "locked": true,
+      "tags": ["lfl_last_year"]
+    }
+  ],
+  "closed_periods": [],
+  "inventory": [
+    {
+      "store_key_numeric": 101,
+      "sku_key_numeric": 2001,
+      "on_hand": 25,
+      "in_transit": 4
+    },
+    {
+      "store_key_numeric": 102,
+      "sku_key_numeric": 2002,
+      "on_hand": 18,
+      "in_transit": 2
+    }
+  ]
+}

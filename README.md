@@ -62,3 +62,21 @@ cd backend && uvicorn app.main:app
 # Frontend
 cd frontend && npm install && npm run dev
 ```
+
+## Демо-сиды
+```bash
+PYTHONPATH=backend python backend/scripts/seed_demo_data.py --purge
+```
+
+- сиды создают регионы, сети, магазины, пользователей всех ролей, планы, продажи, бонусные схемы и закрытый период на август 2024.
+- исходные данные описаны в `ops/demo/demo_data.json`.
+
+## E2E (Playwright)
+
+```bash
+# Требуется запущенный backend с доступом к API (по умолчанию http://localhost:8000/api/v1)
+API_BASE_URL=http://localhost:8000/api/v1 npm run test:e2e
+```
+
+- глобальный setup автоматически пересоздаёт demo-данные через `backend/scripts/seed_demo_data.py`.
+- сценарии живут в `e2e/tests/scenarios.spec.ts`.
